@@ -59,6 +59,12 @@ namespace GridTools.Javelin.MongoDbActivities
         public InArgument<string> UpsertKeyField { get; set; }
 
         [Category("4. Load Settings")]
+        [DisplayName("Drop Collection If Exists")]
+        [Description("If true, drops/cleans the target collection before loading data")]
+        [DefaultValue(false)]
+        public InArgument<bool> DropCollectionIfExists { get; set; }
+
+        [Category("4. Load Settings")]
         [DisplayName("Batch Size")]
         [Description("Number of documents per bulk write batch (default: 1000)")]
         [DefaultValue(1000)]
@@ -105,6 +111,7 @@ namespace GridTools.Javelin.MongoDbActivities
                 string targetCollName = TargetCollectionName.Get(context);
                 string writeMode = (WriteMode.Get(context) ?? "Insert").Trim();
                 string keyField = (UpsertKeyField.Get(context) ?? "_id").Trim();
+                bool dropCollection = DropCollectionIfExists.Get(context);
                 int batchSize = BatchSize.Get(context) ?? 1000;
                 shouldShred = AutoShredVaultOnComplete.Get(context);
                 string projIdStr = ProjectIdentifier.Get(context);
@@ -127,7 +134,16 @@ namespace GridTools.Javelin.MongoDbActivities
                     "[MongoVaultToTarget] Tag Template '{0}' validado ({1} regras ativas). Lendo cofre '{2}' e carregando em NÃO-PROD: {3}.{4}",
                     templateName, resolvedRules.Count, vaultPath, targetDbName, targetCollName);
 
-                var targetCollection = MongoConnectionHelper.GetCollection(targetConnStr, targetDbName, targetCollName);
+                var targetDb = MongoConnectionHelper.GetDatabase(targetConnStr, targetDbName);
+                if (dropCollection)
+                {
+                    GlobalSettings.MessageLogger.LogMessage(
+                        "[MongoVaultToTarget] DropCollectionIfExists=true: Removendo collection '{0}' no destino antes da carga...",
+                        targetCollName);
+                    targetDb.DropCollection(targetCollName);
+                }
+
+                var targetCollection = targetDb.GetCollection<BsonDocument>(targetCollName);
                 var maskingEngine = new TdmDataPainterEngine(resolvedRules);
 
                 long totalLoaded = 0;

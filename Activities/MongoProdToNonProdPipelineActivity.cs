@@ -74,6 +74,12 @@ namespace GridTools.Javelin.MongoDbActivities
         [DefaultValue("_id")]
         public InArgument<string> UpsertKeyField { get; set; }
 
+        [Category("2. Target (Non-Production)")]
+        [DisplayName("Drop Collection If Exists")]
+        [Description("If true, drops/cleans the target collection before loading data")]
+        [DefaultValue(false)]
+        public InArgument<bool> DropCollectionIfExists { get; set; }
+
         // --- Data Assistant Tag Template (Obrigatório para Garantia de Mascaramento) ---
         [RequiredArgument]
         [Category("3. Data Assistant Tag Template")]
@@ -157,6 +163,7 @@ namespace GridTools.Javelin.MongoDbActivities
 
                 string writeMode = (WriteMode.Get(context) ?? "Insert").Trim();
                 string upsertKey = (UpsertKeyField.Get(context) ?? "_id").Trim();
+                bool dropCollection = DropCollectionIfExists.Get(context);
                 int batchSize = BatchSize.Get(context) ?? 2000;
                 bool dryRun = DryRun.Get(context);
                 autoShred = AutoShredVault.Get(context);
@@ -228,7 +235,16 @@ namespace GridTools.Javelin.MongoDbActivities
 
                 if (!dryRun)
                 {
-                    var tgtCollection = MongoConnectionHelper.GetCollection(tgtConn, tgtDb, tgtColl);
+                    var targetDb = MongoConnectionHelper.GetDatabase(tgtConn, tgtDb);
+                    if (dropCollection)
+                    {
+                        GlobalSettings.MessageLogger.LogMessage(
+                            "[MongoPipeline] DropCollectionIfExists=true: Removendo collection '{0}' no destino antes da carga...",
+                            tgtColl);
+                        targetDb.DropCollection(tgtColl);
+                    }
+
+                    var tgtCollection = targetDb.GetCollection<BsonDocument>(tgtColl);
                     var docsToInsert = new List<BsonDocument>();
                     var bulkOps = new List<WriteModel<BsonDocument>>();
 
