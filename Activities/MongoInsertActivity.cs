@@ -36,6 +36,10 @@ namespace GridTools.Javelin.MongoDbActivities
         [Description("Optional: Insert rows directly from a Javelin DataTable")]
         public InArgument<DataTable> InputDataTable { get; set; }
 
+        [DisplayName("TDM Portal URL")]
+        [Description("URL do TDM Portal (ex: https://tdm-server:8443). Se em branco, busca automaticamente no application.properties local.")]
+        public InArgument<string> TdmPortalUrl { get; set; }
+
         [DisplayName("Inserted Count")]
         public OutArgument<int> InsertedCount { get; set; }
 
@@ -53,8 +57,9 @@ namespace GridTools.Javelin.MongoDbActivities
                 string collName = CollectionName.Get(context);
                 string docJson = DocumentJson.Get(context);
                 DataTable inputDt = InputDataTable.Get(context);
+                string portalUrl = TdmPortalUrl.Get(context);
 
-                var collection = MongoConnectionHelper.GetCollection(connStr, dbName, collName);
+                var collection = MongoConnectionHelper.GetCollection(connStr, dbName, collName, portalUrl);
                 var docsToInsert = new List<BsonDocument>();
 
                 if (!string.IsNullOrWhiteSpace(docJson))

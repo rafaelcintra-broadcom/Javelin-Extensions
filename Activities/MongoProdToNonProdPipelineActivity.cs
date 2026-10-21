@@ -87,12 +87,17 @@ namespace GridTools.Javelin.MongoDbActivities
 
         // --- Data Assistant Tag Template (Obrigatório para Garantia de Mascaramento) ---
         [RequiredArgument]
-        [Category("3. Data Assistant Tag Template")]
+        [Category("3. Data Assistant Tag Template & TDM Portal")]
         [DisplayName("Data Assistant Tag Template Name")]
         [Description("Nome do Template de TAG do Data Assistant no TDM Portal (ex: MONGODB_PII_TAG_TEMPLATE). OBRIGATÓRIO: O pipeline não roda sem este template.")]
         public InArgument<string> DataAssistantTagTemplate { get; set; }
 
-        [Category("3. Data Assistant Tag Template")]
+        [Category("3. Data Assistant Tag Template & TDM Portal")]
+        [DisplayName("TDM Portal URL")]
+        [Description("URL do TDM Portal (ex: https://tdm-server:8443). Se em branco, localiza automaticamente o application.properties na máquina local.")]
+        public InArgument<string> TdmPortalUrl { get; set; }
+
+        [Category("3. Data Assistant Tag Template & TDM Portal")]
         [DisplayName("TDM Project Name / ID")]
         [Description("Opcional: ID ou Nome do Projeto no TDM para carregar regras específicas de projeto")]
         public InArgument<string> ProjectIdentifier { get; set; }
@@ -176,6 +181,7 @@ namespace GridTools.Javelin.MongoDbActivities
                 int batchSize = BatchSize.Get(context) ?? 2000;
                 bool dryRun = DryRun.Get(context);
                 autoShred = AutoShredVault.Get(context);
+                string portalUrl = TdmPortalUrl.Get(context);
                 string projIdStr = ProjectIdentifier.Get(context);
                 long? projId = null;
                 if (!string.IsNullOrWhiteSpace(projIdStr) && long.TryParse(projIdStr, out long pVal))
@@ -184,7 +190,7 @@ namespace GridTools.Javelin.MongoDbActivities
                 }
 
                 // 3. Extrai dados de PROD para o Cofre com suporte a SQL WHERE ou JSON
-                var srcCollection = MongoConnectionHelper.GetCollection(srcConn, srcDb, srcColl);
+                var srcCollection = MongoConnectionHelper.GetCollection(srcConn, srcDb, srcColl, portalUrl);
                 var filterDoc = MongoSqlFilterParser.BuildFilter(effectiveFilter);
 
                 GlobalSettings.MessageLogger.LogMessage(
@@ -194,7 +200,7 @@ namespace GridTools.Javelin.MongoDbActivities
 
                 // 1. Valida e Busca as Regras do Tag Template via API do TDM (Trava de Segurança)
                 var resolvedRules = TdmDataAssistantTemplateResolver.FetchTemplateRules(
-                    templateName, projectId: projId);
+                    templateName, tdmUrl: portalUrl, projectId: projId);
 
                 GlobalSettings.MessageLogger.LogMessage(
                     "[MongoPipeline] Tag Template validado com sucesso! ({0} regras ativas)", resolvedRules.Count);
@@ -248,7 +254,7 @@ namespace GridTools.Javelin.MongoDbActivities
 
                 if (!dryRun)
                 {
-                    var targetDb = MongoConnectionHelper.GetDatabase(tgtConn, tgtDb);
+                    var targetDb = MongoConnectionHelper.GetDatabase(tgtConn, tgtDb, portalUrl);
                     if (dropCollection)
                     {
                         GlobalSettings.MessageLogger.LogMessage(

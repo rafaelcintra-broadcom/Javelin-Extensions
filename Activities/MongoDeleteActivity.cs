@@ -35,6 +35,10 @@ namespace GridTools.Javelin.MongoDbActivities
         [DefaultValue(false)]
         public InArgument<bool> IsDeleteMany { get; set; }
 
+        [DisplayName("TDM Portal URL")]
+        [Description("URL do TDM Portal (ex: https://tdm-server:8443). Se em branco, busca automaticamente no application.properties local.")]
+        public InArgument<string> TdmPortalUrl { get; set; }
+
         [DisplayName("Deleted Count")]
         public OutArgument<long> DeletedCount { get; set; }
 
@@ -49,8 +53,9 @@ namespace GridTools.Javelin.MongoDbActivities
                 string collName = CollectionName.Get(context);
                 string filterStr = FilterJson.Get(context);
                 bool isDeleteMany = IsDeleteMany.Get(context);
+                string portalUrl = TdmPortalUrl.Get(context);
 
-                var collection = MongoConnectionHelper.GetCollection(connStr, dbName, collName);
+                var collection = MongoConnectionHelper.GetCollection(connStr, dbName, collName, portalUrl);
                 var filterDoc = BsonSerializer.Deserialize<BsonDocument>(filterStr);
 
                 if (isDeleteMany)

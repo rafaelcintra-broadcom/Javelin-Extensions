@@ -42,6 +42,11 @@ namespace GridTools.Javelin.MongoDbActivities
         public InArgument<string> DataAssistantTagTemplate { get; set; }
 
         [Category("3. Data Assistant Tag Template (Optional for Double-Masking)")]
+        [DisplayName("TDM Portal URL")]
+        [Description("URL do TDM Portal (ex: https://tdm-server:8443). Se em branco, localiza automaticamente o application.properties na máquina local.")]
+        public InArgument<string> TdmPortalUrl { get; set; }
+
+        [Category("3. Data Assistant Tag Template (Optional for Double-Masking)")]
         [DisplayName("TDM Project Name / ID")]
         public InArgument<string> ProjectIdentifier { get; set; }
 
@@ -106,6 +111,7 @@ namespace GridTools.Javelin.MongoDbActivities
                 bool dropCollection = DropCollectionIfExists.Get(context);
                 int batchSize = BatchSize.Get(context) ?? 1000;
                 shouldShred = AutoShredVaultOnComplete.Get(context);
+                string portalUrl = TdmPortalUrl.Get(context);
                 string projIdStr = ProjectIdentifier.Get(context);
                 long? projId = null;
                 if (!string.IsNullOrWhiteSpace(projIdStr) && long.TryParse(projIdStr, out long pVal))
@@ -121,7 +127,7 @@ namespace GridTools.Javelin.MongoDbActivities
                 TdmDataPainterEngine maskingEngine = null;
                 if (!string.IsNullOrWhiteSpace(templateName))
                 {
-                    var resolvedRules = TdmDataAssistantTemplateResolver.FetchTemplateRules(templateName, projectId: projId);
+                    var resolvedRules = TdmDataAssistantTemplateResolver.FetchTemplateRules(templateName, tdmUrl: portalUrl, projectId: projId);
                     maskingEngine = new TdmDataPainterEngine(resolvedRules);
                     GlobalSettings.MessageLogger.LogMessage(
                         "[MongoVaultToTarget] Template adicional '{0}' aplicado ({1} regras ativas).", templateName, resolvedRules.Count);
@@ -131,7 +137,7 @@ namespace GridTools.Javelin.MongoDbActivities
                     "[MongoVaultToTarget] Lendo cofre seguro '{0}' e carregando em NÃO-PROD: {1}.{2}",
                     vaultPath, targetDbName, targetCollName);
 
-                var targetDb = MongoConnectionHelper.GetDatabase(targetConnStr, targetDbName);
+                var targetDb = MongoConnectionHelper.GetDatabase(targetConnStr, targetDbName, portalUrl);
                 if (dropCollection)
                 {
                     GlobalSettings.MessageLogger.LogMessage(

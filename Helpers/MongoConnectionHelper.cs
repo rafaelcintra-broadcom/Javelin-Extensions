@@ -10,7 +10,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
         private static readonly ConcurrentDictionary<string, IMongoClient> ClientCache = 
             new ConcurrentDictionary<string, IMongoClient>(StringComparer.OrdinalIgnoreCase);
 
-        public static IMongoDatabase GetDatabase(string rawConnectionStringOrProfile, string databaseName)
+        public static IMongoDatabase GetDatabase(string rawConnectionStringOrProfile, string databaseName, string tdmPortalUrl = null)
         {
             if (string.IsNullOrWhiteSpace(rawConnectionStringOrProfile))
                 throw new ArgumentException("MongoDB ConnectionString or Connection Profile Name cannot be null or empty.");
@@ -18,7 +18,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             // 1. Tenta resolver via API do TDM se for nome de perfil (ex: MONGO_PROD_CLUSTER)
             string actualDbName;
             string resolvedUri = TdmPortalConnectionProfileResolver.ResolveMongoConnectionString(
-                rawConnectionStringOrProfile, out actualDbName, databaseName);
+                rawConnectionStringOrProfile, out actualDbName, databaseName, tdmPortalUrl);
 
             string effectiveDb = !string.IsNullOrWhiteSpace(databaseName) ? databaseName : actualDbName;
             if (string.IsNullOrWhiteSpace(effectiveDb))
@@ -40,12 +40,13 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
         public static IMongoCollection<MongoDB.Bson.BsonDocument> GetCollection(
             string connectionStringOrProfile, 
             string databaseName, 
-            string collectionName)
+            string collectionName,
+            string tdmPortalUrl = null)
         {
             if (string.IsNullOrWhiteSpace(collectionName))
                 throw new ArgumentException("MongoDB CollectionName cannot be null or empty.");
 
-            var db = GetDatabase(connectionStringOrProfile, databaseName);
+            var db = GetDatabase(connectionStringOrProfile, databaseName, tdmPortalUrl);
             return db.GetCollection<MongoDB.Bson.BsonDocument>(collectionName);
         }
     }

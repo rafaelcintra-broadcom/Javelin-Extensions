@@ -45,6 +45,10 @@ namespace GridTools.Javelin.MongoDbActivities
         [DefaultValue(false)]
         public InArgument<bool> IsUpsert { get; set; }
 
+        [DisplayName("TDM Portal URL")]
+        [Description("URL do TDM Portal (ex: https://tdm-server:8443). Se em branco, busca automaticamente no application.properties local.")]
+        public InArgument<string> TdmPortalUrl { get; set; }
+
         [DisplayName("Matched Count")]
         public OutArgument<long> MatchedCount { get; set; }
 
@@ -67,8 +71,9 @@ namespace GridTools.Javelin.MongoDbActivities
                 string updateStr = UpdateJson.Get(context);
                 bool isUpdateMany = IsUpdateMany.Get(context);
                 bool isUpsert = IsUpsert.Get(context);
+                string portalUrl = TdmPortalUrl.Get(context);
 
-                var collection = MongoConnectionHelper.GetCollection(connStr, dbName, collName);
+                var collection = MongoConnectionHelper.GetCollection(connStr, dbName, collName, portalUrl);
 
                 var filterDoc = BsonSerializer.Deserialize<BsonDocument>(filterStr);
                 var updateDoc = BsonSerializer.Deserialize<BsonDocument>(updateStr);

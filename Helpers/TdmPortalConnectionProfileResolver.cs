@@ -55,16 +55,53 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
 
         /// <summary>
         /// Obtém a URL base do TDM a partir de argumentos, variáveis de ambiente ou propriedades padrão.
+        /// Se o Javelin estiver na mesma máquina do Portal, tenta detectar a porta real configurada no application.properties.
         /// </summary>
         public static string ResolveTdmBaseUrl(string customUrl = null)
         {
             if (!string.IsNullOrWhiteSpace(customUrl))
-                return customUrl.Trim().TrimEnd('/');
+            {
+                string clean = customUrl.Trim().TrimEnd('/');
+                if (!clean.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                    !clean.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                {
+                    clean = "https://" + clean;
+                }
+                return clean;
+            }
 
             string envUrl = Environment.GetEnvironmentVariable("TDM_URL") ??
                             Environment.GetEnvironmentVariable("TDM_PORTAL_URL");
             if (!string.IsNullOrWhiteSpace(envUrl))
                 return envUrl.Trim().TrimEnd('/');
+
+            // Tenta obter porta e protocolo do application.properties local
+            string propPath = FindTdmApplicationPropertiesPath();
+            if (!string.IsNullOrWhiteSpace(propPath))
+            {
+                try
+                {
+                    var props = ReadPropertiesFile(propPath);
+                    string port = null;
+                    if (props.TryGetValue("server.port", out string sPort) && !string.IsNullOrWhiteSpace(sPort))
+                        port = sPort.Trim();
+
+                    string sslEnabled = null;
+                    if (props.TryGetValue("server.ssl.enabled", out string sSsl))
+                        sslEnabled = sSsl.Trim();
+
+                    if (!string.IsNullOrWhiteSpace(port))
+                    {
+                        bool isHttps = !string.Equals(sslEnabled, "false", StringComparison.OrdinalIgnoreCase);
+                        string proto = isHttps ? "https" : "http";
+                        GlobalSettings.MessageLogger.LogMessage(
+                            "[TdmProfileResolver] URL do Portal detectada via application.properties local ({0}): {1}://localhost:{2}",
+                            propPath, proto, port);
+                        return $"{proto}://localhost:{port}";
+                    }
+                }
+                catch { }
+            }
 
             return "https://localhost:8443";
         }
@@ -97,9 +134,27 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             {
                 candidates.Add(Path.Combine(progFiles, "CA", "CA Test Data Manager Portal", "application.properties"));
                 candidates.Add(Path.Combine(progFiles, "CA", "CA Test Data Manager Portal", "conf", "application.properties"));
+                candidates.Add(Path.Combine(progFiles, "CA", "CA Test Data Manager Portal", "TDMWeb", "application.properties"));
                 candidates.Add(Path.Combine(progFiles, "CA", "Test Data Manager", "TDMWeb", "application.properties"));
+                candidates.Add(Path.Combine(progFiles, "CA", "Test Data Manager", "application.properties"));
                 candidates.Add(Path.Combine(progFiles, "Broadcom", "CA Test Data Manager Portal", "application.properties"));
+                candidates.Add(Path.Combine(progFiles, "Broadcom", "CA Test Data Manager Portal", "conf", "application.properties"));
             }
+
+            string progFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+            if (!string.IsNullOrWhiteSpace(progFilesX86))
+            {
+                candidates.Add(Path.Combine(progFilesX86, "CA", "CA Test Data Manager Portal", "application.properties"));
+                candidates.Add(Path.Combine(progFilesX86, "CA", "CA Test Data Manager Portal", "conf", "application.properties"));
+                candidates.Add(Path.Combine(progFilesX86, "CA", "Test Data Manager", "TDMWeb", "application.properties"));
+            }
+
+            // Diretórios padrão no disco C:\
+            candidates.Add(@"C:\Program Files\CA\CA Test Data Manager Portal\application.properties");
+            candidates.Add(@"C:\Program Files\CA\CA Test Data Manager Portal\conf\application.properties");
+            candidates.Add(@"C:\Program Files\CA\Test Data Manager\TDMWeb\application.properties");
+            candidates.Add(@"C:\CA_TDM\TDMWeb\application.properties");
+            candidates.Add(@"C:\TDM\TDMWeb\application.properties");
 
             foreach (var path in candidates)
             {
@@ -390,11 +445,13 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
         /// Resolve ou constrói a Connection String definitiva do MongoDB:
         /// Se o input for uma URI (mongodb:// ou mongodb+srv://), retorna a própria URI.
         /// Se for o nome de um Connection Profile cadastrado no TDM, busca os dados na API do TDM e monta a URI.
+        /// Se customTdmUrl for nulo/vazio, busca automaticamente no application.properties local.
         /// </summary>
         public static string ResolveMongoConnectionString(
             string inputOrProfileName,
             out string resolvedDbName,
-            string fallbackDbName = null)
+            string fallbackDbName = null,
+            string customTdmUrl = null)
         {
             resolvedDbName = fallbackDbName;
             if (string.IsNullOrWhiteSpace(inputOrProfileName))
@@ -433,10 +490,11 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             }
 
             // 3. Caso contrário, trata como Nome ou ID de Connection Profile do TDM Portal
+            string effectiveBaseUrl = ResolveTdmBaseUrl(customTdmUrl);
             GlobalSettings.MessageLogger.LogMessage(
-                "[TdmProfileResolver] Tentando resolver Connection Profile '{0}' na API do TDM Portal...", trimmed);
+                "[TdmProfileResolver] Tentando resolver Connection Profile '{0}' na API do TDM Portal ({1})...", trimmed, effectiveBaseUrl);
 
-            var profile = ResolveProfile(trimmed);
+            var profile = ResolveProfile(trimmed, tdmUrl: effectiveBaseUrl);
             if (profile != null)
             {
                 if (!string.IsNullOrWhiteSpace(profile.DatabaseName))
@@ -475,10 +533,9 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             }
 
             // Se falhou ao resolver o perfil e não é uma URI válida do MongoDB, emite erro claro
-            string baseUrl = ResolveTdmBaseUrl();
             throw new ArgumentException(
-                $"Não foi possível resolver o Connection Profile '{trimmed}' no TDM Portal ({baseUrl}). " +
-                $"Certifique-se de que o perfil com este nome exato existe no TDM Portal ou informe uma URI MongoDB completa (ex: mongodb://localhost:27017).");
+                $"Não foi possível resolver o Connection Profile '{trimmed}' no TDM Portal ({effectiveBaseUrl}). " +
+                $"Certifique-se de que o perfil com este nome exato existe no TDM Portal, que a URL do Portal está acessível ou informe uma URI MongoDB completa (ex: mongodb://localhost:27017).");
         }
     }
 }

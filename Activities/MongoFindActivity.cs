@@ -53,6 +53,10 @@ namespace GridTools.Javelin.MongoDbActivities
         [Description("Number of documents to skip")]
         public InArgument<int?> Skip { get; set; }
 
+        [DisplayName("TDM Portal URL")]
+        [Description("URL do TDM Portal (ex: https://tdm-server:8443). Se em branco, busca automaticamente no application.properties local.")]
+        public InArgument<string> TdmPortalUrl { get; set; }
+
         [DisplayName("Output JSON")]
         public OutArgument<string> OutJson { get; set; }
 
@@ -77,6 +81,7 @@ namespace GridTools.Javelin.MongoDbActivities
                 string sortStr = SortJson.Get(context);
                 int? limit = Limit.Get(context);
                 int? skip = Skip.Get(context);
+                string portalUrl = TdmPortalUrl.Get(context);
 
                 string effectiveFilter = !string.IsNullOrWhiteSpace(whereClause) ? whereClause : filterStr;
                 if (string.IsNullOrWhiteSpace(effectiveFilter))
@@ -85,7 +90,7 @@ namespace GridTools.Javelin.MongoDbActivities
                 var filter = MongoSqlFilterParser.BuildFilter(effectiveFilter);
                 GlobalSettings.MessageLogger.LogMessage("Executing MongoDB Find on {0}.{1} with filter (MQL): {2}", dbName, collName, filter.ToJson());
 
-                var collection = MongoConnectionHelper.GetCollection(connStr, dbName, collName);
+                var collection = MongoConnectionHelper.GetCollection(connStr, dbName, collName, portalUrl);
                 var findFluent = collection.Find(filter);
 
                 if (!string.IsNullOrWhiteSpace(projectionStr))

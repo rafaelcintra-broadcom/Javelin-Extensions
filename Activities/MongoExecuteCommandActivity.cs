@@ -26,6 +26,10 @@ namespace GridTools.Javelin.MongoDbActivities
         [Description("Command document, e.g. {\"ping\": 1} or {\"dropDatabase\": 1}")]
         public InArgument<string> CommandJson { get; set; }
 
+        [DisplayName("TDM Portal URL")]
+        [Description("URL do TDM Portal (ex: https://tdm-server:8443). Se em branco, busca automaticamente no application.properties local.")]
+        public InArgument<string> TdmPortalUrl { get; set; }
+
         [DisplayName("Response (JSON)")]
         public OutArgument<string> ResponseJson { get; set; }
 
@@ -41,8 +45,9 @@ namespace GridTools.Javelin.MongoDbActivities
                 string connStr = ConnectionString.Get(context);
                 string dbName = DatabaseName.Get(context);
                 string commandStr = CommandJson.Get(context);
+                string portalUrl = TdmPortalUrl.Get(context);
 
-                var database = MongoConnectionHelper.GetDatabase(connStr, dbName);
+                var database = MongoConnectionHelper.GetDatabase(connStr, dbName, portalUrl);
                 var commandDoc = BsonSerializer.Deserialize<BsonDocument>(commandStr);
 
                 var command = new BsonDocumentCommand<BsonDocument>(commandDoc);

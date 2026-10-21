@@ -62,12 +62,17 @@ namespace GridTools.Javelin.MongoDbActivities
         public InArgument<string> VaultDirectory { get; set; }
 
         [RequiredArgument]
-        [Category("3. Data Assistant Tag Template")]
+        [Category("3. Data Assistant Tag Template & TDM Portal")]
         [DisplayName("Data Assistant Tag Template Name")]
         [Description("Nome do Template de TAG do Data Assistant no TDM Portal (ex: MONGODB_PII_TAG_TEMPLATE). OBRIGATÓRIO: os dados são SEMPRE mascarados na memória antes de gravar no cofre.")]
         public InArgument<string> DataAssistantTagTemplate { get; set; }
 
-        [Category("3. Data Assistant Tag Template")]
+        [Category("3. Data Assistant Tag Template & TDM Portal")]
+        [DisplayName("TDM Portal URL")]
+        [Description("URL do TDM Portal (ex: https://tdm-server:8443). Se em branco, localiza automaticamente o application.properties na máquina local.")]
+        public InArgument<string> TdmPortalUrl { get; set; }
+
+        [Category("3. Data Assistant Tag Template & TDM Portal")]
         [DisplayName("TDM Project Name / ID")]
         [Description("Opcional: ID ou Nome do Projeto no TDM para carregar regras específicas de projeto")]
         public InArgument<string> ProjectIdentifier { get; set; }
@@ -116,6 +121,7 @@ namespace GridTools.Javelin.MongoDbActivities
                 string sortStr = SortJson.Get(context);
                 int? limit = Limit.Get(context);
                 string customVaultDir = VaultDirectory.Get(context);
+                string portalUrl = TdmPortalUrl.Get(context);
                 string projIdStr = ProjectIdentifier.Get(context);
                 long? projId = null;
                 if (!string.IsNullOrWhiteSpace(projIdStr) && long.TryParse(projIdStr, out long pVal))
@@ -128,7 +134,7 @@ namespace GridTools.Javelin.MongoDbActivities
                     effectiveFilter = "{}";
 
                 // Busca e valida as regras no TDM Portal (Trava de Segurança fail-closed)
-                var rules = TdmDataAssistantTemplateResolver.FetchTemplateRules(templateName, projectId: projId);
+                var rules = TdmDataAssistantTemplateResolver.FetchTemplateRules(templateName, tdmUrl: portalUrl, projectId: projId);
                 var maskingEngine = new TdmDataPainterEngine(rules);
 
                 var filterDoc = MongoSqlFilterParser.BuildFilter(effectiveFilter);
@@ -143,7 +149,7 @@ namespace GridTools.Javelin.MongoDbActivities
                 VaultSessionId.Set(context, sessionId);
 
                 // 2. Conecta no MongoDB de Produção (com resolução de profile se aplicável)
-                var collection = MongoConnectionHelper.GetCollection(connStr, dbName, collName);
+                var collection = MongoConnectionHelper.GetCollection(connStr, dbName, collName, portalUrl);
                 var findFluent = collection.Find(filterDoc);
 
                 if (!string.IsNullOrWhiteSpace(projStr))

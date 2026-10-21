@@ -33,6 +33,10 @@ namespace GridTools.Javelin.MongoDbActivities
         [Description("Array of pipeline stages, e.g. [ { \"$match\": { \"status\": \"A\" } }, { \"$group\": { \"_id\": \"$cust_id\", \"total\": { \"$sum\": \"$amount\" } } } ]")]
         public InArgument<string> PipelineJson { get; set; }
 
+        [DisplayName("TDM Portal URL")]
+        [Description("URL do TDM Portal (ex: https://tdm-server:8443). Se em branco, busca automaticamente no application.properties local.")]
+        public InArgument<string> TdmPortalUrl { get; set; }
+
         [DisplayName("Output JSON")]
         public OutArgument<string> OutJson { get; set; }
 
@@ -52,8 +56,9 @@ namespace GridTools.Javelin.MongoDbActivities
                 string dbName = DatabaseName.Get(context);
                 string collName = CollectionName.Get(context);
                 string pipelineStr = PipelineJson.Get(context);
+                string portalUrl = TdmPortalUrl.Get(context);
 
-                var collection = MongoConnectionHelper.GetCollection(connStr, dbName, collName);
+                var collection = MongoConnectionHelper.GetCollection(connStr, dbName, collName, portalUrl);
 
                 var stagesArray = BsonSerializer.Deserialize<BsonArray>(pipelineStr);
                 var pipelineStages = stagesArray.Select(s => (IPipelineStageDefinition)new JsonPipelineStageDefinition<BsonDocument, BsonDocument>(s.ToJson())).ToList();
