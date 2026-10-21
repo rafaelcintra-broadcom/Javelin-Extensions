@@ -30,6 +30,23 @@ namespace GridTools.Javelin.MongoDbActivities
         [Description("URL do TDM Portal (ex: https://tdm-server:8443). Se em branco, busca automaticamente no application.properties local.")]
         public InArgument<string> TdmPortalUrl { get; set; }
 
+        [DisplayName("TDM Username")]
+        [Description("Usuário do TDM Portal (opcional)")]
+        public InArgument<string> TdmUsername { get; set; }
+
+        [DisplayName("TDM Password")]
+        [Description("Senha do usuário TDM (opcional)")]
+        public InArgument<string> TdmPassword { get; set; }
+
+        [DisplayName("TDM Auth Token (JWT)")]
+        [Description("Token JWT pré-gerado do TDM Portal (opcional)")]
+        public InArgument<string> TdmAuthToken { get; set; }
+
+        [DisplayName("Enable Debug Logs")]
+        [Description("Se habilitado, imprime no log do Javelin o detalhe de todas as chamadas HTTP para o TDM Portal")]
+        [DefaultValue(false)]
+        public InArgument<bool> EnableDebugLogs { get; set; }
+
         [DisplayName("Response (JSON)")]
         public OutArgument<string> ResponseJson { get; set; }
 
@@ -46,8 +63,13 @@ namespace GridTools.Javelin.MongoDbActivities
                 string dbName = DatabaseName.Get(context);
                 string commandStr = CommandJson.Get(context);
                 string portalUrl = TdmPortalUrl.Get(context);
+                string tdmUser = TdmUsername.Get(context);
+                string tdmPass = TdmPassword.Get(context);
+                string tdmToken = TdmAuthToken.Get(context);
+                bool debugLogs = EnableDebugLogs.Get(context);
 
-                var database = MongoConnectionHelper.GetDatabase(connStr, dbName, portalUrl);
+                var database = MongoConnectionHelper.GetDatabase(
+                    connStr, dbName, portalUrl, tdmToken, tdmUser, tdmPass, debugLogs);
                 var commandDoc = BsonSerializer.Deserialize<BsonDocument>(commandStr);
 
                 var command = new BsonDocumentCommand<BsonDocument>(commandDoc);

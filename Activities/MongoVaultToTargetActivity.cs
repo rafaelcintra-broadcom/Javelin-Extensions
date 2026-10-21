@@ -47,6 +47,27 @@ namespace GridTools.Javelin.MongoDbActivities
         public InArgument<string> TdmPortalUrl { get; set; }
 
         [Category("3. Data Assistant Tag Template (Optional for Double-Masking)")]
+        [DisplayName("TDM Username")]
+        [Description("Usuário do TDM Portal (opcional - se vazio, lê do application.properties ou usa integrator)")]
+        public InArgument<string> TdmUsername { get; set; }
+
+        [Category("3. Data Assistant Tag Template (Optional for Double-Masking)")]
+        [DisplayName("TDM Password")]
+        [Description("Senha do usuário TDM (opcional - se vazio, lê do application.properties)")]
+        public InArgument<string> TdmPassword { get; set; }
+
+        [Category("3. Data Assistant Tag Template (Optional for Double-Masking)")]
+        [DisplayName("TDM Auth Token (JWT)")]
+        [Description("Token JWT pré-gerado do TDM Portal (opcional - se informado, ignora login)")]
+        public InArgument<string> TdmAuthToken { get; set; }
+
+        [Category("3. Data Assistant Tag Template (Optional for Double-Masking)")]
+        [DisplayName("Enable Debug Logs")]
+        [Description("Se habilitado, imprime no log do Javelin o detalhe de todas as chamadas HTTP e respostas para o TDM Portal")]
+        [DefaultValue(false)]
+        public InArgument<bool> EnableDebugLogs { get; set; }
+
+        [Category("3. Data Assistant Tag Template (Optional for Double-Masking)")]
         [DisplayName("TDM Project Name / ID")]
         public InArgument<string> ProjectIdentifier { get; set; }
 
@@ -112,6 +133,10 @@ namespace GridTools.Javelin.MongoDbActivities
                 int batchSize = BatchSize.Get(context) ?? 1000;
                 shouldShred = AutoShredVaultOnComplete.Get(context);
                 string portalUrl = TdmPortalUrl.Get(context);
+                string tdmUser = TdmUsername.Get(context);
+                string tdmPass = TdmPassword.Get(context);
+                string tdmToken = TdmAuthToken.Get(context);
+                bool debugLogs = EnableDebugLogs.Get(context);
                 string projIdStr = ProjectIdentifier.Get(context);
                 long? projId = null;
                 if (!string.IsNullOrWhiteSpace(projIdStr) && long.TryParse(projIdStr, out long pVal))
@@ -127,7 +152,8 @@ namespace GridTools.Javelin.MongoDbActivities
                 TdmDataPainterEngine maskingEngine = null;
                 if (!string.IsNullOrWhiteSpace(templateName))
                 {
-                    var resolvedRules = TdmDataAssistantTemplateResolver.FetchTemplateRules(templateName, tdmUrl: portalUrl, projectId: projId);
+                    var resolvedRules = TdmDataAssistantTemplateResolver.FetchTemplateRules(
+                        templateName, tdmUrl: portalUrl, tdmToken: tdmToken, tdmUser: tdmUser, tdmPass: tdmPass, projectId: projId, enableDebugLogs: debugLogs);
                     maskingEngine = new TdmDataPainterEngine(resolvedRules);
                     GlobalSettings.MessageLogger.LogMessage(
                         "[MongoVaultToTarget] Template adicional '{0}' aplicado ({1} regras ativas).", templateName, resolvedRules.Count);
@@ -137,7 +163,8 @@ namespace GridTools.Javelin.MongoDbActivities
                     "[MongoVaultToTarget] Lendo cofre seguro '{0}' e carregando em NÃO-PROD: {1}.{2}",
                     vaultPath, targetDbName, targetCollName);
 
-                var targetDb = MongoConnectionHelper.GetDatabase(targetConnStr, targetDbName, portalUrl);
+                var targetDb = MongoConnectionHelper.GetDatabase(
+                    targetConnStr, targetDbName, portalUrl, tdmToken, tdmUser, tdmPass, debugLogs);
                 if (dropCollection)
                 {
                     GlobalSettings.MessageLogger.LogMessage(

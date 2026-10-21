@@ -57,7 +57,8 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             string tdmToken = null,
             string tdmUser = null,
             string tdmPass = null,
-            long? projectId = null)
+            long? projectId = null,
+            bool enableDebugLogs = false)
         {
             if (string.IsNullOrWhiteSpace(templateName))
             {
@@ -75,7 +76,8 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             }
 
             string baseUrl = TdmPortalConnectionProfileResolver.ResolveTdmBaseUrl(tdmUrl);
-            string authHeader = TdmPortalConnectionProfileResolver.ResolveTdmAuthHeader(baseUrl, tdmToken, tdmUser, tdmPass);
+            string authHeader = TdmPortalConnectionProfileResolver.ResolveTdmAuthHeader(
+                baseUrl, tdmToken, tdmUser, tdmPass, enableDebugLogs);
 
             GlobalSettings.MessageLogger.LogMessage(
                 "[DataAssistant] Buscando Tag Template '{0}' na API do Data Assistant do TDM Portal ({1})...",
@@ -119,22 +121,40 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                     req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
                     var resp = HttpClient.SendAsync(req).GetAwaiter().GetResult();
-                    if (!resp.IsSuccessStatusCode) continue;
-
                     string json = resp.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+                    if (!resp.IsSuccessStatusCode)
+                    {
+                        if (enableDebugLogs)
+                        {
+                            string respExcerpt = !string.IsNullOrWhiteSpace(json) && json.Length > 200
+                                ? json.Substring(0, 200) + "..."
+                                : json;
+                            GlobalSettings.MessageLogger.LogMessage(
+                                "[DataAssistant][DEBUG] Consulta GET {0} retornou HTTP {1}: {2}",
+                                endpoint, (int)resp.StatusCode, respExcerpt);
+                        }
+                        continue;
+                    }
+
                     var parsed = ParseClassifierRulesFromJson(json, cleanTemplateName);
                     if (parsed.Count > 0)
                     {
                         resolvedRules.AddRange(parsed);
                         GlobalSettings.MessageLogger.LogMessage(
-                            "[DataAssistant] Sucesso ao carregar regras via API: {0} ({1} regras)", endpoint, parsed.Count);
-                        break;
+                            "[DataAssistant] Tag Template '{0}' encontrado via {1}! ({2} regras carregadas)",
+                            cleanTemplateName, endpoint, parsed.Count);
+                        TemplateCache[cleanTemplateName] = resolvedRules;
+                        return resolvedRules;
                     }
                 }
                 catch (Exception ex)
                 {
-                    GlobalSettings.MessageLogger.LogMessage(
-                        "[DataAssistant] Tentativa no endpoint {0} retornou: {1}", endpoint, ex.Message);
+                    if (enableDebugLogs)
+                    {
+                        GlobalSettings.MessageLogger.LogMessage(
+                            "[DataAssistant][DEBUG] Tentativa no endpoint {0} falhou: {1}", endpoint, ex.Message);
+                    }
                 }
             }
 

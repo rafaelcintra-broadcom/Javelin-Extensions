@@ -98,6 +98,21 @@ namespace GridTools.Javelin.MongoDbActivities
         public InArgument<string> TdmPortalUrl { get; set; }
 
         [Category("3. Data Assistant Tag Template & TDM Portal")]
+        [DisplayName("TDM Username")]
+        [Description("Usuário do TDM Portal (opcional - se vazio, lê do application.properties ou usa integrator)")]
+        public InArgument<string> TdmUsername { get; set; }
+
+        [Category("3. Data Assistant Tag Template & TDM Portal")]
+        [DisplayName("TDM Password")]
+        [Description("Senha do usuário TDM (opcional - se vazio, lê do application.properties)")]
+        public InArgument<string> TdmPassword { get; set; }
+
+        [Category("3. Data Assistant Tag Template & TDM Portal")]
+        [DisplayName("TDM Auth Token (JWT)")]
+        [Description("Token JWT pré-gerado do TDM Portal (opcional - se informado, ignora login)")]
+        public InArgument<string> TdmAuthToken { get; set; }
+
+        [Category("3. Data Assistant Tag Template & TDM Portal")]
         [DisplayName("TDM Project Name / ID")]
         [Description("Opcional: ID ou Nome do Projeto no TDM para carregar regras específicas de projeto")]
         public InArgument<string> ProjectIdentifier { get; set; }
@@ -113,6 +128,12 @@ namespace GridTools.Javelin.MongoDbActivities
         [Description("If true, simulates extraction, vault encryption and masking without writing to destination")]
         [DefaultValue(false)]
         public InArgument<bool> DryRun { get; set; }
+
+        [Category("4. Security Vault & Performance")]
+        [DisplayName("Enable Debug Logs")]
+        [Description("Se habilitado, imprime no log do Javelin o detalhe de todas as chamadas HTTP e respostas para o TDM Portal")]
+        [DefaultValue(false)]
+        public InArgument<bool> EnableDebugLogs { get; set; }
 
         [Category("4. Security Vault & Performance")]
         [DisplayName("Auto Shred Vault")]
@@ -181,7 +202,11 @@ namespace GridTools.Javelin.MongoDbActivities
                 int batchSize = BatchSize.Get(context) ?? 2000;
                 bool dryRun = DryRun.Get(context);
                 autoShred = AutoShredVault.Get(context);
+                bool debugLogs = EnableDebugLogs.Get(context);
                 string portalUrl = TdmPortalUrl.Get(context);
+                string tdmUser = TdmUsername.Get(context);
+                string tdmPass = TdmPassword.Get(context);
+                string tdmToken = TdmAuthToken.Get(context);
                 string projIdStr = ProjectIdentifier.Get(context);
                 long? projId = null;
                 if (!string.IsNullOrWhiteSpace(projIdStr) && long.TryParse(projIdStr, out long pVal))
@@ -190,7 +215,8 @@ namespace GridTools.Javelin.MongoDbActivities
                 }
 
                 // 3. Extrai dados de PROD para o Cofre com suporte a SQL WHERE ou JSON
-                var srcCollection = MongoConnectionHelper.GetCollection(srcConn, srcDb, srcColl, portalUrl);
+                var srcCollection = MongoConnectionHelper.GetCollection(
+                    srcConn, srcDb, srcColl, portalUrl, tdmToken, tdmUser, tdmPass, debugLogs);
                 var filterDoc = MongoSqlFilterParser.BuildFilter(effectiveFilter);
 
                 GlobalSettings.MessageLogger.LogMessage(
@@ -200,7 +226,7 @@ namespace GridTools.Javelin.MongoDbActivities
 
                 // 1. Valida e Busca as Regras do Tag Template via API do TDM (Trava de Segurança)
                 var resolvedRules = TdmDataAssistantTemplateResolver.FetchTemplateRules(
-                    templateName, tdmUrl: portalUrl, projectId: projId);
+                    templateName, tdmUrl: portalUrl, tdmToken: tdmToken, tdmUser: tdmUser, tdmPass: tdmPass, projectId: projId, enableDebugLogs: debugLogs);
 
                 GlobalSettings.MessageLogger.LogMessage(
                     "[MongoPipeline] Tag Template validado com sucesso! ({0} regras ativas)", resolvedRules.Count);
@@ -254,7 +280,8 @@ namespace GridTools.Javelin.MongoDbActivities
 
                 if (!dryRun)
                 {
-                    var targetDb = MongoConnectionHelper.GetDatabase(tgtConn, tgtDb, portalUrl);
+                    var targetDb = MongoConnectionHelper.GetDatabase(
+                        tgtConn, tgtDb, portalUrl, tdmToken, tdmUser, tdmPass, debugLogs);
                     if (dropCollection)
                     {
                         GlobalSettings.MessageLogger.LogMessage(

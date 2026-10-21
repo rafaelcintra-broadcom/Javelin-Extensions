@@ -10,7 +10,14 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
         private static readonly ConcurrentDictionary<string, IMongoClient> ClientCache = 
             new ConcurrentDictionary<string, IMongoClient>(StringComparer.OrdinalIgnoreCase);
 
-        public static IMongoDatabase GetDatabase(string rawConnectionStringOrProfile, string databaseName, string tdmPortalUrl = null)
+        public static IMongoDatabase GetDatabase(
+            string rawConnectionStringOrProfile, 
+            string databaseName, 
+            string tdmPortalUrl = null,
+            string tdmToken = null,
+            string tdmUser = null,
+            string tdmPass = null,
+            bool enableDebugLogs = false)
         {
             if (string.IsNullOrWhiteSpace(rawConnectionStringOrProfile))
                 throw new ArgumentException("MongoDB ConnectionString or Connection Profile Name cannot be null or empty.");
@@ -18,7 +25,14 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             // 1. Tenta resolver via API do TDM se for nome de perfil (ex: MONGO_PROD_CLUSTER)
             string actualDbName;
             string resolvedUri = TdmPortalConnectionProfileResolver.ResolveMongoConnectionString(
-                rawConnectionStringOrProfile, out actualDbName, databaseName, tdmPortalUrl);
+                rawConnectionStringOrProfile, 
+                out actualDbName, 
+                databaseName, 
+                tdmPortalUrl,
+                tdmToken,
+                tdmUser,
+                tdmPass,
+                enableDebugLogs);
 
             string effectiveDb = !string.IsNullOrWhiteSpace(databaseName) ? databaseName : actualDbName;
             if (string.IsNullOrWhiteSpace(effectiveDb))
@@ -41,12 +55,16 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             string connectionStringOrProfile, 
             string databaseName, 
             string collectionName,
-            string tdmPortalUrl = null)
+            string tdmPortalUrl = null,
+            string tdmToken = null,
+            string tdmUser = null,
+            string tdmPass = null,
+            bool enableDebugLogs = false)
         {
             if (string.IsNullOrWhiteSpace(collectionName))
                 throw new ArgumentException("MongoDB CollectionName cannot be null or empty.");
 
-            var db = GetDatabase(connectionStringOrProfile, databaseName, tdmPortalUrl);
+            var db = GetDatabase(connectionStringOrProfile, databaseName, tdmPortalUrl, tdmToken, tdmUser, tdmPass, enableDebugLogs);
             return db.GetCollection<MongoDB.Bson.BsonDocument>(collectionName);
         }
     }

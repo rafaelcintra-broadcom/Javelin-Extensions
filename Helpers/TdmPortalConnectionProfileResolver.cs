@@ -196,11 +196,22 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
         /// Obtém o token JWT do TDM Portal ou efetua login automático via Basic Auth se fornecido.
         /// Prioriza leitura blindada das credenciais do 'integrator' no application.properties local.
         /// </summary>
-        public static string ResolveTdmAuthHeader(string tdmUrl, string customToken = null, string user = null, string pass = null)
+        public static string ResolveTdmAuthHeader(
+            string tdmUrl, 
+            string customToken = null, 
+            string user = null, 
+            string pass = null,
+            bool enableDebugLogs = false)
         {
             if (!string.IsNullOrWhiteSpace(customToken))
             {
                 string token = customToken.Trim();
+                if (enableDebugLogs)
+                {
+                    GlobalSettings.MessageLogger.LogMessage(
+                        "[TdmProfileResolver][DEBUG] Utilizando Token JWT customizado informado pelo usuário (prefixo: {0}...).",
+                        token.Length > 15 ? token.Substring(0, 15) : "***");
+                }
                 return token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) ? token : "Bearer " + token;
             }
 
@@ -209,12 +220,18 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             if (!string.IsNullOrWhiteSpace(envToken))
             {
                 string token = envToken.Trim();
+                if (enableDebugLogs)
+                {
+                    GlobalSettings.MessageLogger.LogMessage(
+                        "[TdmProfileResolver][DEBUG] Utilizando Token JWT da variável de ambiente TDM_JWT/TDM_TOKEN.");
+                }
                 return token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) ? token : "Bearer " + token;
             }
 
-            // 1. Tenta carregar credenciais do 'integrator' direto do application.properties do TDM
+            // 1. Tenta carregar credenciais das propriedades ou argumentos
             string adminUser = user;
             string adminPass = pass;
+            string sourceDesc = "Argumento Javelin";
 
             if (string.IsNullOrWhiteSpace(adminUser) || string.IsNullOrWhiteSpace(adminPass))
             {
@@ -224,26 +241,85 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                     try
                     {
                         var props = ReadPropertiesFile(propPath);
-                        if (props.TryGetValue("tdm.integrator.user", out string intUser) && !string.IsNullOrWhiteSpace(intUser))
-                            adminUser = intUser;
-                        else if (props.TryGetValue("integrator.user", out string intUser2) && !string.IsNullOrWhiteSpace(intUser2))
-                            adminUser = intUser2;
 
-                        if (props.TryGetValue("tdm.integrator.password", out string intPass) && !string.IsNullOrWhiteSpace(intPass))
-                            adminPass = intPass;
-                        else if (props.TryGetValue("integrator.password", out string intPass2) && !string.IsNullOrWhiteSpace(intPass2))
-                            adminPass = intPass2;
+                        // Busca chaves conhecidas do TDM para usuário de integração/admin
+                        string[] userKeys = {
+                            "tdmweb.security.integration.userName",
+                            "security.integration.userName",
+                            "tdm.integrator.user",
+                            "integrator.user",
+                            "tdm.admin.user",
+                            "admin.user"
+                        };
+
+                        string[] passKeys = {
+                            "tdmweb.security.integration.password",
+                            "security.integration.password",
+                            "tdm.integrator.password",
+                            "integrator.password",
+                            "tdm.admin.password",
+                            "admin.password"
+                        };
+
+                        foreach (var uk in userKeys)
+                        {
+                            if (props.TryGetValue(uk, out string val) && !string.IsNullOrWhiteSpace(val))
+                            {
+                                adminUser = val.Trim();
+                                break;
+                            }
+                        }
+
+                        foreach (var pk in passKeys)
+                        {
+                            if (props.TryGetValue(pk, out string val) && !string.IsNullOrWhiteSpace(val))
+                            {
+                                adminPass = val.Trim();
+                                break;
+                            }
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(adminUser))
+                        {
+                            sourceDesc = $"application.properties ({propPath})";
+                        }
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        if (enableDebugLogs)
+                        {
+                            GlobalSettings.MessageLogger.LogMessage(
+                                "[TdmProfileResolver][DEBUG] Erro ao ler application.properties: {0}", ex.Message);
+                        }
+                    }
                 }
             }
 
             // Fallbacks de variáveis de ambiente
             if (string.IsNullOrWhiteSpace(adminUser))
-                adminUser = Environment.GetEnvironmentVariable("TDM_ADMIN_USER") ?? "integrator";
+            {
+                adminUser = Environment.GetEnvironmentVariable("TDM_ADMIN_USER");
+                if (!string.IsNullOrWhiteSpace(adminUser)) sourceDesc = "Env Var TDM_ADMIN_USER";
+            }
 
             if (string.IsNullOrWhiteSpace(adminPass))
-                adminPass = Environment.GetEnvironmentVariable("TDM_ADMIN_PASS") ?? "integrator";
+            {
+                adminPass = Environment.GetEnvironmentVariable("TDM_ADMIN_PASS");
+            }
+
+            // Fallback padrão se não configurado
+            if (string.IsNullOrWhiteSpace(adminUser))
+            {
+                adminUser = "integrator";
+                sourceDesc = "Padrão TDM (integrator)";
+            }
+            if (string.IsNullOrWhiteSpace(adminPass))
+            {
+                adminPass = "integrator";
+            }
+
+            GlobalSettings.MessageLogger.LogMessage(
+                "[TdmProfileResolver] Autenticando no TDM Portal com usuário '{0}' (Origem: {1})...", adminUser, sourceDesc);
 
             // Tenta obter JWT via endpoints de autenticação oficiais do TDM
             string authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{adminUser}:{adminPass}"));
@@ -263,9 +339,10 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                     request.Headers.TryAddWithoutValidation("Authorization", $"Basic {authString}");
 
                     var response = HttpClient.SendAsync(request).GetAwaiter().GetResult();
+                    string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
                     if (response.IsSuccessStatusCode)
                     {
-                        string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                         var jObj = JObject.Parse(body);
                         string jwt = jObj.Value<string>("token") ??
                                      jObj.Value<string>("jwt") ??
@@ -275,16 +352,31 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                         if (!string.IsNullOrWhiteSpace(jwt))
                         {
                             GlobalSettings.MessageLogger.LogMessage(
-                                "[TdmProfileResolver] Autenticação realizada com sucesso no TDM Portal via {0} (usuário: {1})",
+                                "[TdmProfileResolver] ✅ Login efetuado com sucesso em {0}! JWT obtido para usuário '{1}'.",
                                 loginUrl, adminUser);
                             return "Bearer " + jwt;
                         }
                     }
+                    else
+                    {
+                        string bodyExcerpt = !string.IsNullOrWhiteSpace(body) && body.Length > 200
+                            ? body.Substring(0, 200) + "..."
+                            : body;
+                        GlobalSettings.MessageLogger.LogMessage(
+                            "[TdmProfileResolver] Tentativa de login em {0} retornou HTTP {1}: {2}",
+                            loginUrl, (int)response.StatusCode, bodyExcerpt);
+                    }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    GlobalSettings.MessageLogger.LogMessage(
+                        "[TdmProfileResolver] Falha de conexão ao tentar login em {0}: {1}", loginUrl, ex.Message);
+                }
             }
 
-            // Fallback para Basic Auth direto
+            GlobalSettings.MessageLogger.LogMessage(
+                "[TdmProfileResolver] ⚠️ Não foi possível obter JWT via login. Continuando com Basic Auth para '{0}'.", adminUser);
+
             return "Basic " + authString;
         }
 
@@ -297,7 +389,8 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             string tdmToken = null,
             string tdmUser = null,
             string tdmPass = null,
-            long? projectId = null)
+            long? projectId = null,
+            bool enableDebugLogs = false)
         {
             if (string.IsNullOrWhiteSpace(profileIdentifier))
                 return null;
@@ -309,10 +402,9 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                 return cached;
 
             string baseUrl = ResolveTdmBaseUrl(tdmUrl);
-            string authHeader = ResolveTdmAuthHeader(baseUrl, tdmToken, tdmUser, tdmPass);
+            string authHeader = ResolveTdmAuthHeader(baseUrl, tdmToken, tdmUser, tdmPass, enableDebugLogs);
 
             // 2. Endpoints candidatos do TDM Portal em ordem de precisão:
-            // ➔ Prioridade 1: Busca exata pelo nome do perfil na URL (Endpoint padrão do CPM)
             string encodedName = Uri.EscapeDataString(cleanId);
             var endpoints = new List<string>
             {
@@ -345,14 +437,26 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                     req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
                     var resp = HttpClient.SendAsync(req).GetAwaiter().GetResult();
+                    string json = resp.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
                     if (!resp.IsSuccessStatusCode)
                     {
+                        string respExcerpt = !string.IsNullOrWhiteSpace(json) && json.Length > 200
+                            ? json.Substring(0, 200) + "..."
+                            : json;
                         GlobalSettings.MessageLogger.LogMessage(
-                            "[TdmProfileResolver] Consulta GET {0} retornou HTTP {1}", endpoint, (int)resp.StatusCode);
+                            "[TdmProfileResolver] Consulta GET {0} retornou HTTP {1}: {2}",
+                            endpoint, (int)resp.StatusCode, respExcerpt);
                         continue;
                     }
 
-                    string json = resp.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                    if (enableDebugLogs)
+                    {
+                        GlobalSettings.MessageLogger.LogMessage(
+                            "[TdmProfileResolver][DEBUG] Resposta HTTP {0} de {1}: {2}",
+                            (int)resp.StatusCode, endpoint, json.Length > 500 ? json.Substring(0, 500) + "..." : json);
+                    }
+
                     var profiles = ParseProfilesFromJson(json);
 
                     foreach (var p in profiles)
@@ -368,7 +472,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                     if (found != null)
                     {
                         GlobalSettings.MessageLogger.LogMessage(
-                            "[TdmProfileResolver] Perfil '{0}' resolvido via TDM API (ID: {1}, DB: {2}, Host: {3}, URL: {4})",
+                            "[TdmProfileResolver] ✅ Perfil '{0}' resolvido com sucesso via TDM API (ID: {1}, DB: {2}, Host: {3}, URL: {4})",
                             found.Name, found.Id, found.DatabaseName, found.Host, found.ConnectionUrl);
                         return found;
                     }
@@ -509,7 +613,11 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             string inputOrProfileName,
             out string resolvedDbName,
             string fallbackDbName = null,
-            string customTdmUrl = null)
+            string customTdmUrl = null,
+            string customToken = null,
+            string customUser = null,
+            string customPass = null,
+            bool enableDebugLogs = false)
         {
             resolvedDbName = fallbackDbName;
             if (string.IsNullOrWhiteSpace(inputOrProfileName))
@@ -552,7 +660,14 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             GlobalSettings.MessageLogger.LogMessage(
                 "[TdmProfileResolver] Tentando resolver Connection Profile '{0}' na API do TDM Portal ({1})...", trimmed, effectiveBaseUrl);
 
-            var profile = ResolveProfile(trimmed, tdmUrl: effectiveBaseUrl);
+            var profile = ResolveProfile(
+                trimmed, 
+                tdmUrl: effectiveBaseUrl, 
+                tdmToken: customToken, 
+                tdmUser: customUser, 
+                tdmPass: customPass,
+                enableDebugLogs: enableDebugLogs);
+
             if (profile != null)
             {
                 if (!string.IsNullOrWhiteSpace(profile.DatabaseName))

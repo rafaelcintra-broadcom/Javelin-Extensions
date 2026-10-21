@@ -57,6 +57,23 @@ namespace GridTools.Javelin.MongoDbActivities
         [Description("URL do TDM Portal (ex: https://tdm-server:8443). Se em branco, busca automaticamente no application.properties local.")]
         public InArgument<string> TdmPortalUrl { get; set; }
 
+        [DisplayName("TDM Username")]
+        [Description("Usuário do TDM Portal (opcional)")]
+        public InArgument<string> TdmUsername { get; set; }
+
+        [DisplayName("TDM Password")]
+        [Description("Senha do usuário TDM (opcional)")]
+        public InArgument<string> TdmPassword { get; set; }
+
+        [DisplayName("TDM Auth Token (JWT)")]
+        [Description("Token JWT pré-gerado do TDM Portal (opcional)")]
+        public InArgument<string> TdmAuthToken { get; set; }
+
+        [DisplayName("Enable Debug Logs")]
+        [Description("Se habilitado, imprime no log do Javelin o detalhe de todas as chamadas HTTP para o TDM Portal")]
+        [DefaultValue(false)]
+        public InArgument<bool> EnableDebugLogs { get; set; }
+
         [DisplayName("Output JSON")]
         public OutArgument<string> OutJson { get; set; }
 
@@ -82,6 +99,10 @@ namespace GridTools.Javelin.MongoDbActivities
                 int? limit = Limit.Get(context);
                 int? skip = Skip.Get(context);
                 string portalUrl = TdmPortalUrl.Get(context);
+                string tdmUser = TdmUsername.Get(context);
+                string tdmPass = TdmPassword.Get(context);
+                string tdmToken = TdmAuthToken.Get(context);
+                bool debugLogs = EnableDebugLogs.Get(context);
 
                 string effectiveFilter = !string.IsNullOrWhiteSpace(whereClause) ? whereClause : filterStr;
                 if (string.IsNullOrWhiteSpace(effectiveFilter))
@@ -90,7 +111,8 @@ namespace GridTools.Javelin.MongoDbActivities
                 var filter = MongoSqlFilterParser.BuildFilter(effectiveFilter);
                 GlobalSettings.MessageLogger.LogMessage("Executing MongoDB Find on {0}.{1} with filter (MQL): {2}", dbName, collName, filter.ToJson());
 
-                var collection = MongoConnectionHelper.GetCollection(connStr, dbName, collName, portalUrl);
+                var collection = MongoConnectionHelper.GetCollection(
+                    connStr, dbName, collName, portalUrl, tdmToken, tdmUser, tdmPass, debugLogs);
                 var findFluent = collection.Find(filter);
 
                 if (!string.IsNullOrWhiteSpace(projectionStr))
