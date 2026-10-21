@@ -241,16 +241,21 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             string baseUrl = ResolveTdmBaseUrl(tdmUrl);
             string authHeader = ResolveTdmAuthHeader(baseUrl, tdmToken, tdmUser, tdmPass);
 
-            // 2. Endpoints candidatos do TDM Portal
+            // 2. Endpoints candidatos do TDM Portal (incluindo filtro por nome)
+            string encodedName = Uri.EscapeDataString(cleanId);
             var endpoints = new List<string>
             {
+                $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/connectionProfiles?name={encodedName}&size=100",
                 $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/connectionProfiles?size=1000",
+                $"{baseUrl}/TestDataManager/api/ca/v1/connectionProfiles?name={encodedName}&size=100",
                 $"{baseUrl}/TestDataManager/api/ca/v1/connectionProfiles?size=1000"
             };
 
             if (projectId.HasValue && projectId.Value > 0)
             {
+                endpoints.Insert(0, $"{baseUrl}/TestDataManager/api/ca/v1/projects/{projectId.Value}/connectionProfiles?name={encodedName}&size=100");
                 endpoints.Insert(0, $"{baseUrl}/TestDataManager/api/ca/v1/projects/{projectId.Value}/connectionProfiles?size=1000");
+                endpoints.Insert(0, $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/projects/{projectId.Value}/connectionProfiles?name={encodedName}&size=100");
                 endpoints.Insert(0, $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/projects/{projectId.Value}/connectionProfiles?size=1000");
             }
 
@@ -274,7 +279,9 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                         ProfileCache[p.Id.ToString()] = p;
                     }
 
-                    if (ProfileCache.TryGetValue(cleanId, out var found))
+                    // Tenta endpoints no formato case-insensitive
+                    var found = FindProfileInCache(cleanId);
+                    if (found != null)
                     {
                         GlobalSettings.MessageLogger.LogMessage(
                             "[TdmProfileResolver] Perfil '{0}' resolvido via TDM API (ID: {1}, DB: {2}, URL: {3})",
@@ -287,6 +294,24 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                     GlobalSettings.MessageLogger.LogMessage(
                         "[TdmProfileResolver] Tentativa no endpoint {0} retornou: {1}", endpoint, ex.Message);
                 }
+            }
+
+            return null;
+        }
+
+        private static TdmConnectionProfileInfo FindProfileInCache(string searchName)
+        {
+            if (string.IsNullOrWhiteSpace(searchName)) return null;
+
+            if (ProfileCache.TryGetValue(searchName, out var exact))
+                return exact;
+
+            foreach (var kvp in ProfileCache)
+            {
+                if (string.Equals(kvp.Key, searchName, StringComparison.OrdinalIgnoreCase))
+                    return kvp.Value;
+                if (kvp.Value != null && string.Equals(kvp.Value.Name, searchName, StringComparison.OrdinalIgnoreCase))
+                    return kvp.Value;
             }
 
             return null;
@@ -320,12 +345,22 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                     string desc = item.Value<string>("description") ?? item.Value<string>("profileDescription");
                     string dbType = item.Value<string>("dbType") ?? item.Value<string>("databaseType") ?? item.Value<string>("rdbmsType");
                     string driver = item.Value<string>("driverClass") ?? item.Value<string>("datasourceDriver");
-                    string url = item.Value<string>("connectionUrl") ?? item.Value<string>("jdbcUrl") ?? item.Value<string>("datasourceUrl") ?? item.Value<string>("baseUrl");
+                    string url = item.Value<string>("connectionUrl") ?? item.Value<string>("jdbcUrl") ?? item.Value<string>("datasourceUrl") ?? item.Value<string>("baseUrl") ?? item.Value<string>("uri");
                     string user = item.Value<string>("user") ?? item.Value<string>("username") ?? item.Value<string>("userName");
-                    string pass = item.Value<string>("password");
-                    string dbName = item.Value<string>("databaseName") ?? item.Value<string>("dbName") ?? item.Value<string>("schema");
-                    string host = item.Value<string>("host") ?? item.Value<string>("serverName");
-                    int port = item.Value<int?>("port") ?? 27017;
+                    string pass = item.Value<string>("password") ?? item.Value<string>("userPassword");
+                    string dbName = item.Value<string>("databaseName") ?? item.Value<string>("dbName") ?? item.Value<string>("schema") ?? item.Value<string>("database");
+                    string host = item.Value<string>("host") ?? item.Value<string>("serverName") ?? item.Value<string>("server");
+                    int port = item.Value<int?>("port") ?? item.Value<int?>("serverPort") ?? 27017;
+
+                    // Se a URL estiver dentro de um objeto de propriedades ou config
+                    if (string.IsNullOrWhiteSpace(url) && item["properties"] is JObject props)
+                    {
+                        url = props.Value<string>("connectionUrl") ?? props.Value<string>("uri") ?? props.Value<string>("url");
+                        if (string.IsNullOrWhiteSpace(user)) user = props.Value<string>("username") ?? props.Value<string>("user");
+                        if (string.IsNullOrWhiteSpace(pass)) pass = props.Value<string>("password");
+                        if (string.IsNullOrWhiteSpace(dbName)) dbName = props.Value<string>("database") ?? props.Value<string>("databaseName");
+                        if (string.IsNullOrWhiteSpace(host)) host = props.Value<string>("host");
+                    }
 
                     if (!string.IsNullOrWhiteSpace(name))
                     {
@@ -367,11 +402,10 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
 
             string trimmed = inputOrProfileName.Trim();
 
-            // Se já for uma URI do MongoDB direta
+            // 1. Se já for uma URI do MongoDB direta (mongodb:// ou mongodb+srv://)
             if (trimmed.StartsWith("mongodb://", StringComparison.OrdinalIgnoreCase) ||
                 trimmed.StartsWith("mongodb+srv://", StringComparison.OrdinalIgnoreCase))
             {
-                // Tenta inferir database da URI se não fornecido
                 if (string.IsNullOrWhiteSpace(resolvedDbName))
                 {
                     var match = Regex.Match(trimmed, @"mongodb(?:\+srv)?://[^/]+/([^?/\s]+)");
@@ -383,7 +417,25 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                 return trimmed;
             }
 
-            // Caso contrário, trata como Nome ou ID de Connection Profile do TDM
+            // 2. Se for uma URL no formato JDBC do TDM Portal (ex: jdbc:mongodb://...)
+            if (trimmed.StartsWith("jdbc:mongodb://", StringComparison.OrdinalIgnoreCase))
+            {
+                string cleanUri = trimmed.Substring(5); // Remove o 'jdbc:'
+                if (string.IsNullOrWhiteSpace(resolvedDbName))
+                {
+                    var match = Regex.Match(cleanUri, @"mongodb://[^/]+/([^?/\s]+)");
+                    if (match.Success)
+                    {
+                        resolvedDbName = match.Groups[1].Value;
+                    }
+                }
+                return cleanUri;
+            }
+
+            // 3. Caso contrário, trata como Nome ou ID de Connection Profile do TDM Portal
+            GlobalSettings.MessageLogger.LogMessage(
+                "[TdmProfileResolver] Tentando resolver Connection Profile '{0}' na API do TDM Portal...", trimmed);
+
             var profile = ResolveProfile(trimmed);
             if (profile != null)
             {
@@ -394,7 +446,12 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
 
                 if (!string.IsNullOrWhiteSpace(profile.ConnectionUrl))
                 {
-                    string rawUrl = profile.ConnectionUrl;
+                    string rawUrl = profile.ConnectionUrl.Trim();
+                    if (rawUrl.StartsWith("jdbc:mongodb://", StringComparison.OrdinalIgnoreCase))
+                    {
+                        rawUrl = rawUrl.Substring(5);
+                    }
+
                     if (rawUrl.StartsWith("mongodb://", StringComparison.OrdinalIgnoreCase) ||
                         rawUrl.StartsWith("mongodb+srv://", StringComparison.OrdinalIgnoreCase))
                     {
@@ -410,15 +467,18 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                 if (!string.IsNullOrWhiteSpace(profile.Username))
                 {
                     string pass = !string.IsNullOrWhiteSpace(profile.Password) ? profile.Password : "";
-                    authPart = $"{profile.Username}:{pass}@";
+                    authPart = $"{Uri.EscapeDataString(profile.Username)}:{Uri.EscapeDataString(pass)}@";
                 }
 
                 string db = !string.IsNullOrWhiteSpace(resolvedDbName) ? resolvedDbName : "admin";
                 return $"mongodb://{authPart}{host}:{port}/{db}?authSource=admin";
             }
 
-            // Retorna o valor original caso a resolução falhe
-            return inputOrProfileName;
+            // Se falhou ao resolver o perfil e não é uma URI válida do MongoDB, emite erro claro
+            string baseUrl = ResolveTdmBaseUrl();
+            throw new ArgumentException(
+                $"Não foi possível resolver o Connection Profile '{trimmed}' no TDM Portal ({baseUrl}). " +
+                $"Certifique-se de que o perfil com este nome exato existe no TDM Portal ou informe uma URI MongoDB completa (ex: mongodb://localhost:27017).");
         }
     }
 }
