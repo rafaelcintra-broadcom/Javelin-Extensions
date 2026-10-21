@@ -245,32 +245,47 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             if (string.IsNullOrWhiteSpace(adminPass))
                 adminPass = Environment.GetEnvironmentVariable("TDM_ADMIN_PASS") ?? "integrator";
 
-            // Tenta obter JWT via endpoint de autenticação
-            try
+            // Tenta obter JWT via endpoints de autenticação oficiais do TDM
+            string authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{adminUser}:{adminPass}"));
+            var loginEndpoints = new List<string>
             {
-                string authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{adminUser}:{adminPass}"));
-                var request = new HttpRequestMessage(HttpMethod.Post, $"{tdmUrl}/TestDataManager/api/ca/v1/auth/login")
-                {
-                    Headers = { { "Authorization", $"Basic {authString}" } }
-                };
+                $"{tdmUrl}/TestDataManager/user/login",
+                $"{tdmUrl}/user/login",
+                $"{tdmUrl}/TestDataManager/api/ca/v1/auth/login",
+                $"{tdmUrl}/api/ca/v1/auth/login"
+            };
 
-                var response = HttpClient.SendAsync(request).GetAwaiter().GetResult();
-                if (response.IsSuccessStatusCode)
+            foreach (var loginUrl in loginEndpoints)
+            {
+                try
                 {
-                    string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-                    var jObj = JObject.Parse(body);
-                    string jwt = jObj.Value<string>("token") ?? jObj.Value<string>("jwt");
-                    if (!string.IsNullOrWhiteSpace(jwt))
+                    var request = new HttpRequestMessage(HttpMethod.Post, loginUrl);
+                    request.Headers.TryAddWithoutValidation("Authorization", $"Basic {authString}");
+
+                    var response = HttpClient.SendAsync(request).GetAwaiter().GetResult();
+                    if (response.IsSuccessStatusCode)
                     {
-                        return "Bearer " + jwt;
+                        string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                        var jObj = JObject.Parse(body);
+                        string jwt = jObj.Value<string>("token") ??
+                                     jObj.Value<string>("jwt") ??
+                                     jObj.Value<string>("accessToken") ??
+                                     jObj.Value<string>("access_token");
+
+                        if (!string.IsNullOrWhiteSpace(jwt))
+                        {
+                            GlobalSettings.MessageLogger.LogMessage(
+                                "[TdmProfileResolver] Autenticação realizada com sucesso no TDM Portal via {0} (usuário: {1})",
+                                loginUrl, adminUser);
+                            return "Bearer " + jwt;
+                        }
                     }
                 }
+                catch { }
             }
-            catch { }
 
             // Fallback para Basic Auth direto
-            string basicAuth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{adminUser}:{adminPass}"));
-            return "Basic " + basicAuth;
+            return "Basic " + authString;
         }
 
         /// <summary>
@@ -296,22 +311,29 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             string baseUrl = ResolveTdmBaseUrl(tdmUrl);
             string authHeader = ResolveTdmAuthHeader(baseUrl, tdmToken, tdmUser, tdmPass);
 
-            // 2. Endpoints candidatos do TDM Portal (incluindo filtro por nome)
+            // 2. Endpoints candidatos do TDM Portal em ordem de precisão:
+            // ➔ Prioridade 1: Busca exata pelo nome do perfil na URL (Endpoint padrão do CPM)
             string encodedName = Uri.EscapeDataString(cleanId);
             var endpoints = new List<string>
             {
+                $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/connectionProfiles/{encodedName}",
+                $"{baseUrl}/TestDataManager/api/ca/v1/connectionProfiles/{encodedName}",
+                $"{baseUrl}/api/ca/v1/connectionProfiles/{encodedName}",
                 $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/connectionProfiles?name={encodedName}&size=100",
                 $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/connectionProfiles?size=1000",
+                $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/connectionProfiles",
                 $"{baseUrl}/TestDataManager/api/ca/v1/connectionProfiles?name={encodedName}&size=100",
-                $"{baseUrl}/TestDataManager/api/ca/v1/connectionProfiles?size=1000"
+                $"{baseUrl}/TestDataManager/api/ca/v1/connectionProfiles?size=1000",
+                $"{baseUrl}/TestDataManager/api/ca/v1/connectionProfiles",
+                $"{baseUrl}/api/ca/v1/connectionProfiles"
             };
 
             if (projectId.HasValue && projectId.Value > 0)
             {
+                endpoints.Insert(0, $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/projects/{projectId.Value}/connectionProfiles/{encodedName}");
+                endpoints.Insert(0, $"{baseUrl}/TestDataManager/api/ca/v1/projects/{projectId.Value}/connectionProfiles/{encodedName}");
                 endpoints.Insert(0, $"{baseUrl}/TestDataManager/api/ca/v1/projects/{projectId.Value}/connectionProfiles?name={encodedName}&size=100");
-                endpoints.Insert(0, $"{baseUrl}/TestDataManager/api/ca/v1/projects/{projectId.Value}/connectionProfiles?size=1000");
                 endpoints.Insert(0, $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/projects/{projectId.Value}/connectionProfiles?name={encodedName}&size=100");
-                endpoints.Insert(0, $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/projects/{projectId.Value}/connectionProfiles?size=1000");
             }
 
             foreach (var endpoint in endpoints)
@@ -323,31 +345,38 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                     req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
                     var resp = HttpClient.SendAsync(req).GetAwaiter().GetResult();
-                    if (!resp.IsSuccessStatusCode) continue;
+                    if (!resp.IsSuccessStatusCode)
+                    {
+                        GlobalSettings.MessageLogger.LogMessage(
+                            "[TdmProfileResolver] Consulta GET {0} retornou HTTP {1}", endpoint, (int)resp.StatusCode);
+                        continue;
+                    }
 
                     string json = resp.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                     var profiles = ParseProfilesFromJson(json);
 
                     foreach (var p in profiles)
                     {
-                        ProfileCache[p.Name] = p;
-                        ProfileCache[p.Id.ToString()] = p;
+                        if (!string.IsNullOrWhiteSpace(p.Name))
+                            ProfileCache[p.Name] = p;
+                        if (p.Id > 0)
+                            ProfileCache[p.Id.ToString()] = p;
                     }
 
-                    // Tenta endpoints no formato case-insensitive
+                    // Tenta busca case-insensitive no cache
                     var found = FindProfileInCache(cleanId);
                     if (found != null)
                     {
                         GlobalSettings.MessageLogger.LogMessage(
-                            "[TdmProfileResolver] Perfil '{0}' resolvido via TDM API (ID: {1}, DB: {2}, URL: {3})",
-                            found.Name, found.Id, found.DatabaseName, found.ConnectionUrl);
+                            "[TdmProfileResolver] Perfil '{0}' resolvido via TDM API (ID: {1}, DB: {2}, Host: {3}, URL: {4})",
+                            found.Name, found.Id, found.DatabaseName, found.Host, found.ConnectionUrl);
                         return found;
                     }
                 }
                 catch (Exception ex)
                 {
                     GlobalSettings.MessageLogger.LogMessage(
-                        "[TdmProfileResolver] Tentativa no endpoint {0} retornou: {1}", endpoint, ex.Message);
+                        "[TdmProfileResolver] Tentativa no endpoint {0} falhou: {1}", endpoint, ex.Message);
                 }
             }
 
@@ -380,31 +409,49 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             try
             {
                 var token = JToken.Parse(json);
-                JArray items = null;
+                var items = new List<JObject>();
 
-                if (token is JArray arr) items = arr;
+                if (token is JArray arr)
+                {
+                    foreach (var elem in arr)
+                    {
+                        if (elem is JObject objElem) items.Add(objElem);
+                    }
+                }
                 else if (token is JObject obj)
                 {
-                    items = obj["connectionProfiles"] as JArray ??
-                            obj["profiles"] as JArray ??
-                            obj["elements"] as JArray ??
-                            obj["content"] as JArray;
-                }
+                    JArray nestedArr = obj["connectionProfiles"] as JArray ??
+                                       obj["profiles"] as JArray ??
+                                       obj["elements"] as JArray ??
+                                       obj["content"] as JArray ??
+                                       obj["data"] as JArray;
 
-                if (items == null) return list;
+                    if (nestedArr != null)
+                    {
+                        foreach (var elem in nestedArr)
+                        {
+                            if (elem is JObject objElem) items.Add(objElem);
+                        }
+                    }
+                    else if (obj.ContainsKey("name") || obj.ContainsKey("profileName") || obj.ContainsKey("server") || obj.ContainsKey("connectionUrl"))
+                    {
+                        // Resposta de profile único direto do endpoint /connectionProfiles/{name}
+                        items.Add(obj);
+                    }
+                }
 
                 foreach (var item in items)
                 {
                     long id = item.Value<long?>("id") ?? item.Value<long?>("profileId") ?? item.Value<long?>("connectionProfileId") ?? item.Value<long?>("cpId") ?? 0;
                     string name = item.Value<string>("name") ?? item.Value<string>("profileName") ?? item.Value<string>("connectionProfileName") ?? item.Value<string>("cpName");
                     string desc = item.Value<string>("description") ?? item.Value<string>("profileDescription");
-                    string dbType = item.Value<string>("dbType") ?? item.Value<string>("databaseType") ?? item.Value<string>("rdbmsType");
+                    string dbType = item.Value<string>("dbType") ?? item.Value<string>("databaseType") ?? item.Value<string>("rdbmsType") ?? item.Value<string>("profileType");
                     string driver = item.Value<string>("driverClass") ?? item.Value<string>("datasourceDriver");
-                    string url = item.Value<string>("connectionUrl") ?? item.Value<string>("jdbcUrl") ?? item.Value<string>("datasourceUrl") ?? item.Value<string>("baseUrl") ?? item.Value<string>("uri");
-                    string user = item.Value<string>("user") ?? item.Value<string>("username") ?? item.Value<string>("userName");
-                    string pass = item.Value<string>("password") ?? item.Value<string>("userPassword");
-                    string dbName = item.Value<string>("databaseName") ?? item.Value<string>("dbName") ?? item.Value<string>("schema") ?? item.Value<string>("database");
-                    string host = item.Value<string>("host") ?? item.Value<string>("serverName") ?? item.Value<string>("server");
+                    string url = item.Value<string>("datasourceUrl") ?? item.Value<string>("connectionUrl") ?? item.Value<string>("jdbcUrl") ?? item.Value<string>("baseUrl") ?? item.Value<string>("uri");
+                    string user = item.Value<string>("username") ?? item.Value<string>("user") ?? item.Value<string>("userName");
+                    string pass = item.Value<string>("password") ?? item.Value<string>("userPassword") ?? item.Value<string>("profPassword");
+                    string dbName = item.Value<string>("database") ?? item.Value<string>("databaseName") ?? item.Value<string>("dbName") ?? item.Value<string>("schema");
+                    string host = item.Value<string>("server") ?? item.Value<string>("host") ?? item.Value<string>("serverName") ?? item.Value<string>("hostname");
                     int port = item.Value<int?>("port") ?? item.Value<int?>("serverPort") ?? 27017;
 
                     // Se a URL estiver dentro de um objeto de propriedades ou config
@@ -414,11 +461,22 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                         if (string.IsNullOrWhiteSpace(user)) user = props.Value<string>("username") ?? props.Value<string>("user");
                         if (string.IsNullOrWhiteSpace(pass)) pass = props.Value<string>("password");
                         if (string.IsNullOrWhiteSpace(dbName)) dbName = props.Value<string>("database") ?? props.Value<string>("databaseName");
-                        if (string.IsNullOrWhiteSpace(host)) host = props.Value<string>("host");
+                        if (string.IsNullOrWhiteSpace(host)) host = props.Value<string>("server") ?? props.Value<string>("host");
                     }
 
                     if (!string.IsNullOrWhiteSpace(name))
                     {
+                        // Decripta senha caso venha criptografada pelo TDM/Javelin
+                        string effectivePass = pass;
+                        if (!string.IsNullOrWhiteSpace(pass))
+                        {
+                            try
+                            {
+                                effectivePass = new JavelinPasswordDecryptor().SubstitutePasswordsInString(pass);
+                            }
+                            catch { }
+                        }
+
                         list.Add(new TdmConnectionProfileInfo
                         {
                             Id = id,
@@ -428,7 +486,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                             DriverClass = driver,
                             ConnectionUrl = url,
                             Username = user,
-                            Password = pass,
+                            Password = effectivePass,
                             DatabaseName = dbName,
                             Host = host,
                             Port = port

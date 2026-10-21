@@ -15,4 +15,12 @@ namespace GridTools.Javelin.Common
             }
         }
     }
+
+    public class JavelinPasswordDecryptor
+    {
+        public string SubstitutePasswordsInString(string input)
+        {
+            return input;
+        }
+    }
 }
