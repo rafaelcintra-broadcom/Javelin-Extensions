@@ -68,7 +68,76 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
         }
 
         /// <summary>
+        /// Localiza o arquivo application.properties nas pastas padrão de instalação do TDM.
+        /// </summary>
+        private static string FindTdmApplicationPropertiesPath()
+        {
+            var candidates = new List<string>
+            {
+                Environment.GetEnvironmentVariable("TDM_PROPERTIES_PATH"),
+                Environment.GetEnvironmentVariable("TDM_CONFIG_PATH")
+            };
+
+            string tdmHome = Environment.GetEnvironmentVariable("TDM_HOME") ??
+                             Environment.GetEnvironmentVariable("CATDM_HOME") ??
+                             Environment.GetEnvironmentVariable("TDM_WEB_HOME");
+
+            if (!string.IsNullOrWhiteSpace(tdmHome))
+            {
+                candidates.Add(Path.Combine(tdmHome, "application.properties"));
+                candidates.Add(Path.Combine(tdmHome, "conf", "application.properties"));
+                candidates.Add(Path.Combine(tdmHome, "config", "application.properties"));
+                candidates.Add(Path.Combine(tdmHome, "TDMWeb", "application.properties"));
+            }
+
+            string progFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            if (!string.IsNullOrWhiteSpace(progFiles))
+            {
+                candidates.Add(Path.Combine(progFiles, "CA", "CA Test Data Manager Portal", "application.properties"));
+                candidates.Add(Path.Combine(progFiles, "CA", "CA Test Data Manager Portal", "conf", "application.properties"));
+                candidates.Add(Path.Combine(progFiles, "CA", "Test Data Manager", "TDMWeb", "application.properties"));
+                candidates.Add(Path.Combine(progFiles, "Broadcom", "CA Test Data Manager Portal", "application.properties"));
+            }
+
+            foreach (var path in candidates)
+            {
+                if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
+                    return path;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Carrega pares chave-valor do application.properties do TDM de forma segura.
+        /// </summary>
+        private static Dictionary<string, string> ReadPropertiesFile(string path)
+        {
+            var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+                return dict;
+
+            foreach (var line in File.ReadAllLines(path))
+            {
+                var trimmed = line.Trim();
+                if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith("#") || trimmed.StartsWith("!"))
+                    continue;
+
+                int idx = trimmed.IndexOf('=');
+                if (idx > 0)
+                {
+                    string key = trimmed.Substring(0, idx).Trim();
+                    string val = trimmed.Substring(idx + 1).Trim();
+                    dict[key] = val;
+                }
+            }
+
+            return dict;
+        }
+
+        /// <summary>
         /// Obtém o token JWT do TDM Portal ou efetua login automático via Basic Auth se fornecido.
+        /// Prioriza leitura blindada das credenciais do 'integrator' no application.properties local.
         /// </summary>
         public static string ResolveTdmAuthHeader(string tdmUrl, string customToken = null, string user = null, string pass = null)
         {
@@ -86,8 +155,38 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                 return token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) ? token : "Bearer " + token;
             }
 
-            string adminUser = user ?? Environment.GetEnvironmentVariable("TDM_ADMIN_USER") ?? "administrator";
-            string adminPass = pass ?? Environment.GetEnvironmentVariable("TDM_ADMIN_PASS") ?? "password";
+            // 1. Tenta carregar credenciais do 'integrator' direto do application.properties do TDM
+            string adminUser = user;
+            string adminPass = pass;
+
+            if (string.IsNullOrWhiteSpace(adminUser) || string.IsNullOrWhiteSpace(adminPass))
+            {
+                string propPath = FindTdmApplicationPropertiesPath();
+                if (!string.IsNullOrWhiteSpace(propPath))
+                {
+                    try
+                    {
+                        var props = ReadPropertiesFile(propPath);
+                        if (props.TryGetValue("tdm.integrator.user", out string intUser) && !string.IsNullOrWhiteSpace(intUser))
+                            adminUser = intUser;
+                        else if (props.TryGetValue("integrator.user", out string intUser2) && !string.IsNullOrWhiteSpace(intUser2))
+                            adminUser = intUser2;
+
+                        if (props.TryGetValue("tdm.integrator.password", out string intPass) && !string.IsNullOrWhiteSpace(intPass))
+                            adminPass = intPass;
+                        else if (props.TryGetValue("integrator.password", out string intPass2) && !string.IsNullOrWhiteSpace(intPass2))
+                            adminPass = intPass2;
+                    }
+                    catch { }
+                }
+            }
+
+            // Fallbacks de variáveis de ambiente
+            if (string.IsNullOrWhiteSpace(adminUser))
+                adminUser = Environment.GetEnvironmentVariable("TDM_ADMIN_USER") ?? "integrator";
+
+            if (string.IsNullOrWhiteSpace(adminPass))
+                adminPass = Environment.GetEnvironmentVariable("TDM_ADMIN_PASS") ?? "integrator";
 
             // Tenta obter JWT via endpoint de autenticação
             try
