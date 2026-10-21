@@ -31,10 +31,15 @@ namespace GridTools.Javelin.MongoDbActivities
         public InArgument<string> CollectionName { get; set; }
 
         [Category("1. Source (Production)")]
-        [DisplayName("Filter (JSON)")]
-        [Description("BSON/JSON query filter, e.g. {\"status\": \"ACTIVE\"}. Default is {} for all documents.")]
+        [DisplayName("Filter (JSON or SQL WHERE)")]
+        [Description("BSON/JSON query filter (ex: {\"status\": \"ACTIVE\"}) OU cláusula WHERE clássica (ex: status = 'ATIVO' AND idade >= 18). Default is {} for all documents.")]
         [DefaultValue("{}")]
         public InArgument<string> FilterJson { get; set; }
+
+        [Category("1. Source (Production)")]
+        [DisplayName("WHERE Clause (SQL-Style)")]
+        [Description("Cláusula WHERE clássica opcional (ex: status = 'ATIVO' AND uf IN ('SP','RJ')). Tem precedência se preenchida.")]
+        public InArgument<string> WhereClause { get; set; }
 
         [Category("1. Source (Production)")]
         [DisplayName("Projection (JSON)")]
@@ -105,6 +110,7 @@ namespace GridTools.Javelin.MongoDbActivities
                 string connStr = ConnectionString.Get(context);
                 string dbName = DatabaseName.Get(context);
                 string collName = CollectionName.Get(context);
+                string whereClause = WhereClause.Get(context);
                 string filterStr = FilterJson.Get(context);
                 string projStr = ProjectionJson.Get(context);
                 string sortStr = SortJson.Get(context);
@@ -117,16 +123,19 @@ namespace GridTools.Javelin.MongoDbActivities
                     projId = pVal;
                 }
 
-                if (string.IsNullOrWhiteSpace(filterStr))
-                    filterStr = "{}";
+                string effectiveFilter = !string.IsNullOrWhiteSpace(whereClause) ? whereClause : filterStr;
+                if (string.IsNullOrWhiteSpace(effectiveFilter))
+                    effectiveFilter = "{}";
 
                 // Busca e valida as regras no TDM Portal (Trava de Segurança fail-closed)
                 var rules = TdmDataAssistantTemplateResolver.FetchTemplateRules(templateName, projectId: projId);
                 var maskingEngine = new TdmDataPainterEngine(rules);
 
+                var filterDoc = MongoSqlFilterParser.BuildFilter(effectiveFilter);
+
                 GlobalSettings.MessageLogger.LogMessage(
-                    "[MongoExtractToVault] Iniciando extração segura com mascaramento obrigatório de PROD: {0}.{1} (Template: '{2}', {3} regras)",
-                    dbName, collName, templateName, rules.Count);
+                    "[MongoExtractToVault] Iniciando extração segura com mascaramento obrigatório de PROD: {0}.{1} (Template: '{2}', {3} regras, Filtro MQL: {4})",
+                    dbName, collName, templateName, rules.Count, filterDoc.ToJson());
 
                 // 1. Instancia Cofre Seguro (Barreiras 1 e 2: ACL NTFS + Windows EFS)
                 string vaultDir = SecureVaultHelper.CreateSecureVaultDirectory(customVaultDir);
@@ -135,7 +144,6 @@ namespace GridTools.Javelin.MongoDbActivities
 
                 // 2. Conecta no MongoDB de Produção (com resolução de profile se aplicável)
                 var collection = MongoConnectionHelper.GetCollection(connStr, dbName, collName);
-                var filterDoc = MongoDB.Bson.Serialization.BsonSerializer.Deserialize<BsonDocument>(filterStr);
                 var findFluent = collection.Find(filterDoc);
 
                 if (!string.IsNullOrWhiteSpace(projStr))

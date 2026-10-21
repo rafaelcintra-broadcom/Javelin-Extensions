@@ -34,10 +34,15 @@ namespace GridTools.Javelin.MongoDbActivities
         public InArgument<string> SourceCollectionName { get; set; }
 
         [Category("1. Source (Production)")]
-        [DisplayName("Source Filter (JSON)")]
-        [Description("BSON/JSON query filter, e.g. {\"status\": \"ACTIVE\"}. Default is {} for all documents.")]
+        [DisplayName("Source Filter (JSON or SQL WHERE)")]
+        [Description("Filtro BSON/JSON (ex: {\"status\": \"ACTIVE\"}) OU cláusula WHERE clássica (ex: status = 'ATIVO' AND idade >= 18 AND uf IN ('SP','RJ')).")]
         [DefaultValue("{}")]
         public InArgument<string> SourceFilterJson { get; set; }
+
+        [Category("1. Source (Production)")]
+        [DisplayName("Source WHERE Clause (SQL-Style)")]
+        [Description("Cláusula WHERE clássica opcional (ex: status = 'ATIVO' AND saldo > 1000). Tem precedência se preenchida.")]
+        public InArgument<string> SourceWhereClause { get; set; }
 
         [Category("1. Source (Production)")]
         [DisplayName("Extraction Limit")]
@@ -153,8 +158,12 @@ namespace GridTools.Javelin.MongoDbActivities
                 string srcConn = SourceConnectionString.Get(context);
                 string srcDb = SourceDatabaseName.Get(context);
                 string srcColl = SourceCollectionName.Get(context);
+                string whereClause = SourceWhereClause.Get(context);
                 string filterStr = SourceFilterJson.Get(context);
                 int? limit = Limit.Get(context);
+
+                string effectiveFilter = !string.IsNullOrWhiteSpace(whereClause) ? whereClause : filterStr;
+                if (string.IsNullOrWhiteSpace(effectiveFilter)) effectiveFilter = "{}";
 
                 string tgtConn = TargetConnectionString.Get(context);
                 string tgtDb = TargetDatabaseName.Get(context);
@@ -174,7 +183,9 @@ namespace GridTools.Javelin.MongoDbActivities
                     projId = pVal;
                 }
 
-                if (string.IsNullOrWhiteSpace(filterStr)) filterStr = "{}";
+                // 3. Extrai dados de PROD para o Cofre com suporte a SQL WHERE ou JSON
+                var srcCollection = MongoConnectionHelper.GetCollection(srcConn, srcDb, srcColl);
+                var filterDoc = MongoSqlFilterParser.BuildFilter(effectiveFilter);
 
                 GlobalSettings.MessageLogger.LogMessage(
                     "[MongoPipeline] ==========================================================");
@@ -188,17 +199,14 @@ namespace GridTools.Javelin.MongoDbActivities
                 GlobalSettings.MessageLogger.LogMessage(
                     "[MongoPipeline] Tag Template validado com sucesso! ({0} regras ativas)", resolvedRules.Count);
                 GlobalSettings.MessageLogger.LogMessage(
-                    "[MongoPipeline] Extraindo PROD ({0}.{1}) -> COFRE SEGURO -> NÃO-PROD ({2}.{3})",
-                    srcDb, srcColl, tgtDb, tgtColl);
+                    "[MongoPipeline] Extraindo PROD ({0}.{1}) -> COFRE SEGURO -> NÃO-PROD ({2}.{3}) [Filtro MQL: {4}]",
+                    srcDb, srcColl, tgtDb, tgtColl, filterDoc.ToJson());
 
                 // 2. Instancia Cofre Seguro (Barreiras 1 e 2: ACL NTFS + Windows EFS)
                 vaultDir = SecureVaultHelper.CreateSecureVaultDirectory();
                 string sessionId = Path.GetFileName(vaultDir);
                 VaultSessionId.Set(context, sessionId);
 
-                // 3. Extrai dados de PROD para o Cofre
-                var srcCollection = MongoConnectionHelper.GetCollection(srcConn, srcDb, srcColl);
-                var filterDoc = MongoDB.Bson.Serialization.BsonSerializer.Deserialize<BsonDocument>(filterStr);
                 var findFluent = srcCollection.Find(filterDoc);
                 if (limit.HasValue && limit.Value > 0)
                 {

@@ -28,10 +28,14 @@ namespace GridTools.Javelin.MongoDbActivities
         [DisplayName("Collection Name")]
         public InArgument<string> CollectionName { get; set; }
 
-        [DisplayName("Filter (JSON)")]
-        [Description("BSON/JSON query filter, e.g. {\"status\": \"ACTIVE\"}. Default is {} for all documents.")]
+        [DisplayName("Filter (JSON or SQL WHERE)")]
+        [Description("BSON/JSON query filter (ex: {\"status\": \"ACTIVE\"}) OU cláusula WHERE clássica (ex: status = 'ATIVO' AND idade >= 18). Default is {} for all documents.")]
         [DefaultValue("{}")]
         public InArgument<string> FilterJson { get; set; }
+
+        [DisplayName("WHERE Clause (SQL-Style)")]
+        [Description("Cláusula WHERE clássica opcional (ex: status = 'ATIVO' AND saldo > 1000). Tem precedência se preenchida.")]
+        public InArgument<string> WhereClause { get; set; }
 
         [DisplayName("Projection (JSON)")]
         [Description("Fields to include/exclude, e.g. {\"name\": 1, \"email\": 1, \"_id\": 0}")]
@@ -67,20 +71,21 @@ namespace GridTools.Javelin.MongoDbActivities
                 string connStr = ConnectionString.Get(context);
                 string dbName = DatabaseName.Get(context);
                 string collName = CollectionName.Get(context);
+                string whereClause = WhereClause.Get(context);
                 string filterStr = FilterJson.Get(context);
                 string projectionStr = ProjectionJson.Get(context);
                 string sortStr = SortJson.Get(context);
                 int? limit = Limit.Get(context);
                 int? skip = Skip.Get(context);
 
-                if (string.IsNullOrWhiteSpace(filterStr))
-                    filterStr = "{}";
+                string effectiveFilter = !string.IsNullOrWhiteSpace(whereClause) ? whereClause : filterStr;
+                if (string.IsNullOrWhiteSpace(effectiveFilter))
+                    effectiveFilter = "{}";
 
-                GlobalSettings.MessageLogger.LogMessage("Executing MongoDB Find on {0}.{1} with filter: {2}", dbName, collName, filterStr);
+                var filter = MongoSqlFilterParser.BuildFilter(effectiveFilter);
+                GlobalSettings.MessageLogger.LogMessage("Executing MongoDB Find on {0}.{1} with filter (MQL): {2}", dbName, collName, filter.ToJson());
 
                 var collection = MongoConnectionHelper.GetCollection(connStr, dbName, collName);
-
-                var filter = MongoDB.Bson.Serialization.BsonSerializer.Deserialize<BsonDocument>(filterStr);
                 var findFluent = collection.Find(filter);
 
                 if (!string.IsNullOrWhiteSpace(projectionStr))
