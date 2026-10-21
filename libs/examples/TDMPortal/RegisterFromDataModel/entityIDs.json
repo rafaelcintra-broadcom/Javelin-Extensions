@@ -1,0 +1,23 @@
+[
+   {
+      "entityId":12231,
+      "tableName":"ADDRESS",
+      "profileName":"travel_centos3",
+      "databaseName":"TRAVEL",
+      "schemaName":"TRAVEL"
+   },
+   {
+      "entityId":12232,
+      "tableName":"AIRCRAFT_LAYOUTS",
+      "profileName":"travel_centos3",
+      "databaseName":"TRAVEL",
+      "schemaName":"TRAVEL"
+   },
+   {
+      "entityId":12230,
+      "tableName":"ACCOUNT_PERIODS",
+      "profileName":"travel_centos3",
+      "databaseName":"TRAVEL",
+      "schemaName":"TRAVEL"
+   }
+]

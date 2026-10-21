@@ -1,0 +1,20 @@
+<GTSendMail>
+	<ProtocolConfig>
+		<ProtocolName>smtp</ProtocolName>
+		<Port>587</Port>
+		<Hostname>smtp.gmail.com</Hostname>
+		<ExchangeServiceURL auto_discover="false"></ExchangeServiceURL>
+		<Username>user.name@gmail.com</Username>
+		<Password>Password</Password>
+		<SSL>true</SSL>
+		<FromName>Shashank Mishra</FromName>
+		<FromAddress>user.name@gmail.com</FromAddress>
+		<ReplyToAddress>user.name@gmail.com</ReplyToAddress>
+	</ProtocolConfig>
+	<ToAddresses>user.name@gmail.com</ToAddresses>
+	<CcAddresses></CcAddresses>
+	<BccAddresses></BccAddresses>
+	<Subject>test</Subject>
+	<BodyFilePath>D:\temp\GTSendEmail\GTSendMail.html</BodyFilePath>
+	<AttachementFilePaths>D:\temp\GTSendEmail\GTSendMail.html</AttachementFilePaths>
+</GTSendMail>

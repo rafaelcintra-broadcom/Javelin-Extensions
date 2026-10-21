@@ -1,0 +1,680 @@
+﻿<Flowchart mc:Ignorable="sap sap2010 sads" mva:VisualBasic.Settings="{x:Null}" sap2010:WorkflowViewState.IdRef="Flowchart_1"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:av="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:gjd="clr-namespace:GridTools.Javelin.Designer;assembly=Javelin"
+ xmlns:gjdd="clr-namespace:GridTools.Javelin.Designer.DbActivities;assembly=GridTools.Javelin.Designer.DbActivities"
+ xmlns:gjdf="clr-namespace:GridTools.Javelin.Designer.FileSystemActivities;assembly=GridTools.Javelin.Designer.FileSystemActivities"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
+ xmlns:s="clr-namespace:System;assembly=mscorlib"
+ xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+ xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=mscorlib"
+ xmlns:sd="clr-namespace:System.Data;assembly=System.Data"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <TextExpression.Namespaces>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System.Activities</x:String>
+      <x:String>System.Activities.Statements</x:String>
+      <x:String>System.Activities.Expressions</x:String>
+      <x:String>System.Activities.Validation</x:String>
+      <x:String>System.Activities.XamlIntegration</x:String>
+      <x:String>Microsoft.VisualBasic.Activities</x:String>
+      <x:String>System.Activities.Debugger.Symbol</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Windows.Markup</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Xml.Serialization</x:String>
+      <x:String>System</x:String>
+    </sco:Collection>
+  </TextExpression.Namespaces>
+  <TextExpression.References>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>System.Xaml</AssemblyReference>
+      <AssemblyReference>WindowsBase</AssemblyReference>
+      <AssemblyReference>PresentationCore</AssemblyReference>
+      <AssemblyReference>PresentationFramework</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.DataSetExtensions</AssemblyReference>
+      <AssemblyReference>System.Xml</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.ServiceModel</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.References>
+  <Flowchart.Variables>
+    <Variable x:TypeArguments="sd:DataTable" Name="dtPublishJobs" />
+    <Variable x:TypeArguments="sd:DataRow" Name="dr" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_id" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_proj_id" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_ld_id" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_name" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_type" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_thread_name" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_username" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_iterations" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_iterations_req" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_email" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_phone" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_sched_start" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_start" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_end" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_format" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_status" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_status_date" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_outdir" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_outfile" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_infile" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_tgt" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_src" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_connect_tgt" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_connect_src" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_publishto" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_onduplicate" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_onerror" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_schema" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_cy" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_cm" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_cd" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_running_status" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_comments" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_to_ld_id" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_delete_to_ld_id" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_var_ld_id" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_max_lov_items" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_blob_id" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_clobdata" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_infile_data" />
+    <Variable x:TypeArguments="x:String" Name="var_date_created" />
+    <Variable x:TypeArguments="x:String" Name="var_who_created" />
+    <Variable x:TypeArguments="x:String" Name="var_program_created" />
+    <Variable x:TypeArguments="x:String" Name="var_date_updated" />
+    <Variable x:TypeArguments="x:String" Name="var_who_updated" />
+    <Variable x:TypeArguments="x:String" Name="var_program_updated" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_var_sql" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_var_sql_conn" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_su_id" />
+    <Variable x:TypeArguments="x:String" Name="var_pj_vm_id" />
+  </Flowchart.Variables>
+  <Flowchart.StartNode>
+    <x:Reference>__ReferenceID2</x:Reference>
+  </Flowchart.StartNode>
+  <FlowStep x:Name="__ReferenceID2" sap2010:WorkflowViewState.IdRef="FlowStep_1">
+    <gjd:JGuid.JGuid>
+      <s:Guid>4512266c-fa9c-45f4-945d-d641919783fb</s:Guid>
+    </gjd:JGuid.JGuid>
+    <gjdd:SqlServerActivity CommandTimeOut="{x:Null}" ConnectionString="{x:Null}" ContinueOnError="{x:Null}" Delimiter="{x:Null}" Timeout="{x:Null}" DatabaseName="GTREP31_INDIA" sap2010:WorkflowViewState.IdRef="SqlServerActivity_1" OutDataTable="[dtPublishJobs]" Password="EKTaUgaLVd9Mm4Jgzeim3sJV84TW" Query="SELECT TOP 20 * FROM GTREP_PUBLISH_JOB" Server="." Username="sa" />
+    <FlowStep.Next>
+      <FlowStep x:Name="__ReferenceID1" sap2010:WorkflowViewState.IdRef="FlowStep_4">
+        <gjd:JGuid.JGuid>
+          <s:Guid>223150f5-61d7-4462-bd46-8b67ec9ffe77</s:Guid>
+        </gjd:JGuid.JGuid>
+        <gjdf:ExportDataTableActivity ContinueOnError="{x:Null}" Timeout="{x:Null}" ExportFormat="csv" FilePath="C:\temp\SS.csv" sap2010:WorkflowViewState.IdRef="ExportDataTableActivity_1" InElement="[dtPublishJobs]" />
+      </FlowStep>
+    </FlowStep.Next>
+  </FlowStep>
+  <FlowStep sap2010:WorkflowViewState.IdRef="FlowStep_3">
+    <gjd:JGuid.JGuid>
+      <s:Guid>5ae51f50-e8df-46e4-a42a-0c17a6b97834</s:Guid>
+    </gjd:JGuid.JGuid>
+    <ForEach x:TypeArguments="sd:DataRow" DisplayName="For Each Data Row" sap2010:WorkflowViewState.IdRef="ForEach`1_1" Values="[dtPublishJobs.Select]">
+      <ActivityAction x:TypeArguments="sd:DataRow">
+        <ActivityAction.Argument>
+          <DelegateInArgument x:TypeArguments="sd:DataRow" Name="dr" />
+        </ActivityAction.Argument>
+        <Sequence DisplayName="Assign DataTable Variables" sap2010:WorkflowViewState.IdRef="Sequence_1">
+          <Assign DisplayName="Assign - pj_id" sap2010:WorkflowViewState.IdRef="Assign_1">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_id]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_id").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_proj_id" sap2010:WorkflowViewState.IdRef="Assign_2">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_proj_id]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_proj_id").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_ld_id" sap2010:WorkflowViewState.IdRef="Assign_3">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_ld_id]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_ld_id").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_name" sap2010:WorkflowViewState.IdRef="Assign_4">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_name]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_name").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_type" sap2010:WorkflowViewState.IdRef="Assign_5">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_type]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_type").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_thread_name" sap2010:WorkflowViewState.IdRef="Assign_6">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_thread_name]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_thread_name").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_username" sap2010:WorkflowViewState.IdRef="Assign_7">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_username]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_username").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_iterations" sap2010:WorkflowViewState.IdRef="Assign_8">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_iterations]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_iterations").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_iterations_req" sap2010:WorkflowViewState.IdRef="Assign_9">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_iterations_req]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_iterations_req").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_email" sap2010:WorkflowViewState.IdRef="Assign_10">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_email]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_email").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_phone" sap2010:WorkflowViewState.IdRef="Assign_11">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_phone]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_phone").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_sched_start" sap2010:WorkflowViewState.IdRef="Assign_12">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_sched_start]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_sched_start").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_start" sap2010:WorkflowViewState.IdRef="Assign_13">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_start]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_start").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_end" sap2010:WorkflowViewState.IdRef="Assign_14">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_end]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_end").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_format" sap2010:WorkflowViewState.IdRef="Assign_15">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_format]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_format").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_status" sap2010:WorkflowViewState.IdRef="Assign_16">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_status]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_status").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_status_date">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_status_date]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_status_date").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_outdir">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_outdir]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_outdir").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_outfile">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_outfile]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_outfile").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_infile">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_infile]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_infile").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_tgt" sap2010:WorkflowViewState.IdRef="Assign_44">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_tgt]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_tgt").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_src" sap2010:WorkflowViewState.IdRef="Assign_45">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_src]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_src").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_connect_tgt" sap2010:WorkflowViewState.IdRef="Assign_46">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_connect_tgt]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_connect_tgt").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_connect_src" sap2010:WorkflowViewState.IdRef="Assign_17">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_connect_src]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_connect_src").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_publishto" sap2010:WorkflowViewState.IdRef="Assign_18">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_publishto]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_publishto").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_onduplicate" sap2010:WorkflowViewState.IdRef="Assign_19">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_onduplicate]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_onduplicate").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_onerror" sap2010:WorkflowViewState.IdRef="Assign_20">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_onerror]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_onerror").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_schema" sap2010:WorkflowViewState.IdRef="Assign_21">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_schema]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_schema").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_cy" sap2010:WorkflowViewState.IdRef="Assign_22">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_cy]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_cy").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_cm" sap2010:WorkflowViewState.IdRef="Assign_23">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_cm]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_cm").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_cd" sap2010:WorkflowViewState.IdRef="Assign_24">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_cd]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_cd").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_running_status" sap2010:WorkflowViewState.IdRef="Assign_25">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_running_status]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_running_status").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_comments" sap2010:WorkflowViewState.IdRef="Assign_26">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_comments]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_comments").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_to_ld_id" sap2010:WorkflowViewState.IdRef="Assign_27">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_to_ld_id]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_to_ld_id").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_delete_to_ld_id" sap2010:WorkflowViewState.IdRef="Assign_28">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_delete_to_ld_id]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_delete_to_ld_id").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_var_ld_id" sap2010:WorkflowViewState.IdRef="Assign_29">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_var_ld_id]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_var_ld_id").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_max_lov_items" sap2010:WorkflowViewState.IdRef="Assign_30">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_max_lov_items]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_max_lov_items").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_blob_id" sap2010:WorkflowViewState.IdRef="Assign_31">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_blob_id]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_blob_id").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_clobdata" sap2010:WorkflowViewState.IdRef="Assign_32">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_clobdata]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_clobdata").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_infile_data" sap2010:WorkflowViewState.IdRef="Assign_33">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_infile_data]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_infile_data").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - date_created" sap2010:WorkflowViewState.IdRef="Assign_34">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_date_created]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("date_created").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - who_created" sap2010:WorkflowViewState.IdRef="Assign_35">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_who_created]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("who_created").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - program_created" sap2010:WorkflowViewState.IdRef="Assign_36">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_program_created]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("program_created").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - date_updated" sap2010:WorkflowViewState.IdRef="Assign_37">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_date_updated]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("date_updated").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - who_updated" sap2010:WorkflowViewState.IdRef="Assign_38">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_who_updated]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("who_updated").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - program_updated" sap2010:WorkflowViewState.IdRef="Assign_39">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_program_updated]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("program_updated").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_var_sql" sap2010:WorkflowViewState.IdRef="Assign_40">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_var_sql]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_var_sql").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_var_sql_conn" sap2010:WorkflowViewState.IdRef="Assign_41">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_var_sql_conn]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_var_sql_conn").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_su_id" sap2010:WorkflowViewState.IdRef="Assign_42">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_su_id]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_su_id").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Assign - pj_vm_id" sap2010:WorkflowViewState.IdRef="Assign_43">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[var_pj_vm_id]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[dr("pj_vm_id").ToString()]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Flowchart DisplayName="Write To File" sap2010:WorkflowViewState.IdRef="Flowchart_2" StartNode="{x:Reference __ReferenceID0}">
+            <FlowStep x:Name="__ReferenceID0" sap2010:WorkflowViewState.IdRef="FlowStep_2">
+              <gjd:JGuid.JGuid>
+                <s:Guid>dfa4b2f3-bc3d-4ae6-9e10-cf1a5410949b</s:Guid>
+              </gjd:JGuid.JGuid>
+              <gjdf:FileActivity ContinueOnError="{x:Null}" ReadText="{x:Null}" Timeout="{x:Null}" Action="Append" Content="[var_pj_id &amp; &quot; &quot;  &amp; var_pj_name &amp; Environment.NewLine]" sap2010:WorkflowViewState.IdRef="FileActivity_1" Path="C:\temp\pj.txt" />
+            </FlowStep>
+          </Flowchart>
+        </Sequence>
+      </ActivityAction>
+    </ForEach>
+    <FlowStep.Next>
+      <x:Reference>__ReferenceID1</x:Reference>
+    </FlowStep.Next>
+  </FlowStep>
+  <x:Reference>__ReferenceID1</x:Reference>
+  <sap2010:WorkflowViewState.ViewStateManager>
+    <sap2010:ViewStateManager>
+      <sap2010:ViewStateData Id="SqlServerActivity_1" sap:VirtualizedContainerService.HintSize="230,259">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="ExportDataTableActivity_1" sap:VirtualizedContainerService.HintSize="200,75">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_4">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">190,522.5</av:Point>
+            <av:Size x:Key="ShapeSize">200,75</av:Size>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_1">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">175,120.5</av:Point>
+            <av:Size x:Key="ShapeSize">230,259</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">290,379.5 290,409.5 420,409.5 420,560 390,560</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Assign_1" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_2" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_3" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_4" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_5" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_6" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_7" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_8" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_9" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_10" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_11" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_12" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Assign_13" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Assign_14" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Assign_15" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Assign_16" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Assign_44" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_45" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_46" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_17" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_18" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_19" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_20" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_21" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Assign_22" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Assign_23" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Assign_24" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Assign_25" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Assign_26" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Assign_27" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_28" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_29" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_30" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_31" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_32" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_33" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Assign_34" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Assign_35" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_36" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_37" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_38" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_39" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_40" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_41" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_42" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="Assign_43" sap:VirtualizedContainerService.HintSize="614,60" />
+      <sap2010:ViewStateData Id="FileActivity_1" sap:VirtualizedContainerService.HintSize="200,82">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_2">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">200,149</av:Point>
+            <av:Size x:Key="ShapeSize">200,82</av:Size>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Flowchart_2" sap:VirtualizedContainerService.HintSize="614,636">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
+            <av:Point x:Key="ShapeLocation">270,2.5</av:Point>
+            <av:Size x:Key="ShapeSize">60,75</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">300,77.5 300,149</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Sequence_1" sap:VirtualizedContainerService.HintSize="636,5015">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="ForEach`1_1" sap:VirtualizedContainerService.HintSize="200,51" />
+      <sap2010:ViewStateData Id="FlowStep_3">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">190,434.5</av:Point>
+            <av:Size x:Key="ShapeSize">200,51</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">290,485.5 290,522.5</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Flowchart_1" sap:VirtualizedContainerService.HintSize="614,636">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
+            <av:Point x:Key="ShapeLocation">270,2.5</av:Point>
+            <av:Size x:Key="ShapeSize">60,75</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">300,77.5 300,107.5 290,107.5 290,120.5</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+    </sap2010:ViewStateManager>
+  </sap2010:WorkflowViewState.ViewStateManager>
+  <sads:DebugSymbol.Symbol>dzpDOlxVc2Vyc1xzaGFzaGFua1xEZXNrdG9wXEphdmVsaW5fRmxvd3NcRmxvd19TUUxTZXJ2ZXIudndmDAEBqAUNAQFuBW76AgEHdAl03AEBAm72AW6HAgENbvMCbvcCAQxutgJu3gIBC27mAm7pAgEKbpECbq8CAQluowFusgEBCHRidGcBBnTIAXTZAQEEdHF0gQEBAw==</sads:DebugSymbol.Symbol>
+</Flowchart>

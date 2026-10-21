@@ -1,0 +1,20 @@
+{
+   "projectID":7683,
+   "versionID":7684,
+   "levelID":7688,
+   "listTildes":[
+      
+   ],
+   "metaTable":{
+      "columns":[
+         {
+            "columnName":"DEPARTMENT_NAME",
+            "dataType":"VARCHAR2",
+            "length":30,
+            "scale":0
+         }
+      ],
+      "tableName":"DEPARTMENTS"
+   },
+   "expression":"@add(10,1000)@"
+}

@@ -1,0 +1,44 @@
+{
+   "name":"Publish_travel_e_gen1 NAME",
+   "description":"Publish to travel_e using gen1 DESCRIPTION",
+   "projectId":7683,
+   "versionId":7684,
+   "type":"PUBLISHJOB",
+   "origin":"generation",
+   "scheduledTime":1598894046201,
+   "email":"d.zahrir@gmail.com",
+   "jobs":[
+      
+   ],
+   "parameters":{
+      "variableDefaults":[
+         {
+            "name":"projectVar",
+            "value":"@add(2,2)@"
+         },
+         {
+            "name":"test",
+            "value":"123"
+         }
+      ],
+      "generatorId":7688,
+      "jobType":"PUBLISH",
+      "title":"Publish to travel_e using gen1 TITLE",
+      "publishTo":"TGT",
+      "repeatCount":"2",
+      "tables":[
+         {
+            "tableNo":17,
+            "tableName":"DEPARTMENTS",
+            "status":1,
+            "fileId":null
+         }
+      ],
+      "email":"d.zahrir@gmail.com",
+      "actionOnDuplicate":"exit",
+      "actionOnGenDuplicate":"exit",
+      "target":"TRAVEL_E",
+      "dataTargetProfile":"travel_e",
+      "dataSourceProfile":"travel"
+   }
+}

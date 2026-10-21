@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broadcom TDM Javelin - Custom MongoDB Extension Guide</title>
+    <style>
+        /* ==========================================================================
+           BROADCOM OFFICIAL CORPORATE DESIGN SYSTEM
+           Brand Palette:
+             - Broadcom Red: #CC092F (Primary Accent & Brand Mark)
+             - Broadcom Dark Red: #A60624 (Active / Hover / Accent Borders)
+             - Charcoal Dark: #111827 / #1A1A1A (Headings, Tables & Header Text)
+             - Slate Gray: #4B5563 / #6B7280 (Metadata, Labels & Subtitles)
+             - Neutral Tint: #F8FAFC, #F1F5F9 (Backgrounds, Borders & Card fills)
+           ========================================================================== */
+
+        :root {
+            --bcom-red: #CC092F;
+            --bcom-red-dark: #A60624;
+            --bcom-charcoal: #111827;
+            --bcom-slate: #4B5563;
+            --bcom-slate-light: #9CA3AF;
+            --bcom-bg-neutral: #F8FAFC;
+            --bcom-border: #E5E7EB;
+            --bcom-code-bg: #1E293B;
+            --bcom-green: #059669;
+            --bcom-blue: #2563EB;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #F3F4F6;
+            color: var(--bcom-charcoal);
+            line-height: 1.5;
+            font-size: 13.5px;
+            padding: 24px;
+        }
+
+        .content-wrapper {
+            max-width: 1080px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid var(--bcom-border);
+            border-top: 5px solid var(--bcom-red);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 36px 44px;
+        }
+
+        /* Header & Logo */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--bcom-border);
+            padding-bottom: 18px;
+            margin-bottom: 24px;
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .broadcom-logo-svg {
+            height: 32px;
+            width: auto;
+            margin-bottom: 8px;
+        }
+
+        .doc-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--bcom-charcoal);
+            letter-spacing: -0.3px;
+        }
+
+        .doc-subtitle {
+            font-size: 12.5px;
+            color: var(--bcom-slate);
+            font-weight: 400;
+            margin-top: 2px;
+        }
+
+        .badge-tag {
+            background: #FEE2E2;
+            color: var(--bcom-red-dark);
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            align-self: flex-start;
+        }
+
+        /* Metadata Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            background-color: var(--bcom-bg-neutral);
+            border: 1px solid var(--bcom-border);
+            border-left: 4px solid var(--bcom-red);
+            border-radius: 4px;
+            padding: 12px 18px;
+            margin-bottom: 28px;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meta-label {
+            font-size: 10.5px;
+            text-transform: uppercase;
+            color: var(--bcom-slate);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .meta-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--bcom-charcoal);
+            margin-top: 2px;
+        }
+
+        /* Section Headings */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 28px 0 14px 0;
+            padding-bottom: 6px;
+            border-bottom: 1.5px solid var(--bcom-border);
+        }
+
+        .section-num {
+            background: var(--bcom-red);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--bcom-charcoal);
+        }
+
+        /* Callout Box */
+        .callout {
+            background-color: #EFF6FF;
+            border-left: 4px solid var(--bcom-blue);
+            border-radius: 4px;
+            padding: 12px 16px;
+            margin: 14px 0;
+            font-size: 12.5px;
+            color: #1E3A8A;
+        }
+
+        .callout.success {
+            background-color: #ECFDF5;
+            border-left-color: var(--bcom-green);
+            color: #065F46;
+        }
+
+        .callout.warning {
+            background-color: #FFFBEB;
+            border-left-color: #D97706;
+            color: #92400E;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Cards & Grids */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 14px 0;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid var(--bcom-border);
+            border-radius: 6px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .card-header {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--bcom-charcoal);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            background: #E5E7EB;
+            color: var(--bcom-charcoal);
+        }
+
+        /* Tables */
+        .table-container {
+            margin: 14px 0;
+            border: 1px solid var(--bcom-border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+            text-align: left;
+        }
+
+        thead {
+            background-color: #F8FAFC;
+            border-bottom: 1.5px solid var(--bcom-border);
+        }
+
+        th {
+            padding: 9px 12px;
+            font-weight: 700;
+            color: var(--bcom-charcoal);
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        td {
+            padding: 9px 12px;
+            border-bottom: 1px solid var(--bcom-border);
+            color: var(--bcom-slate);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) {
+            background-color: #FAFAFA;
+        }
+
+        .param-name {
+            font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+            color: var(--bcom-red-dark);
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .param-type {
+            font-size: 11px;
+            color: #6B7280;
+            font-style: italic;
+        }
+
+        /* Code Blocks */
+        pre {
+            background-color: var(--bcom-code-bg);
+            color: #E2E8F0;
+            padding: 12px 14px;
+            border-radius: 5px;
+            font-family: "SFMono-Regular", Consolas, Menlo, Monaco, monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 8px 0 12px 0;
+            line-height: 1.45;
+        }
+
+        code {
+            font-family: "SFMono-Regular", Consolas, Menlo, Monaco, monospace;
+            background-color: #F1F5F9;
+            color: #B91C1C;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 11.5px;
+        }
+
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+        }
+
+        .comment {
+            color: #94A3B8;
+        }
+
+        .kw {
+            color: #F43F5E;
+        }
+
+        .str {
+            color: #38BDF8;
+        }
+
+        .num {
+            color: #FBBF24;
+        }
+
+        /* Step Guide */
+        .step-list {
+            margin: 12px 0;
+            counter-reset: step-counter;
+            list-style: none;
+        }
+
+        .step-item {
+            position: relative;
+            padding-left: 36px;
+            margin-bottom: 14px;
+        }
+
+        .step-item::before {
+            counter-increment: step-counter;
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 24px;
+            height: 24px;
+            background-color: var(--bcom-charcoal);
+            color: #ffffff;
+            font-weight: 700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+
+        .step-title {
+            font-weight: 700;
+            color: var(--bcom-charcoal);
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 36px;
+            padding-top: 14px;
+            border-top: 1px solid var(--bcom-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--bcom-slate-light);
+        }
+
+        @media print {
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .content-wrapper {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="content-wrapper">
+
+    <!-- Header & Logo -->
+    <div class="header">
+        <div class="header-left">
+            <!-- Broadcom Red Wave / Logo -->
+            <svg class="broadcom-logo-svg" viewBox="0 0 240 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12.5 35C5.6 35 0 29.4 0 22.5C0 15.6 5.6 10 12.5 10C17.5 10 21.8 13 23.6 17.3H16.8C15.7 15.2 14.2 14.5 12.5 14.5C8.1 14.5 4.6 18.1 4.6 22.5C4.6 26.9 8.1 30.5 12.5 30.5C14.3 30.5 15.8 29.8 16.8 27.7H23.6C21.8 32 17.5 35 12.5 35Z" fill="#CC092F"/>
+                <path d="M26.5 10.5H31.1V20.2H40.2V10.5H44.8V34.5H40.2V24.8H31.1V34.5H26.5V10.5Z" fill="#CC092F"/>
+                <path d="M48.5 22.5C48.5 15.6 54.1 10 61 10C67.9 10 73.5 15.6 73.5 22.5C73.5 29.4 67.9 35 61 35C54.1 35 48.5 29.4 48.5 22.5ZM68.9 22.5C68.9 18.1 65.4 14.5 61 14.5C56.6 14.5 53.1 18.1 53.1 22.5C53.1 26.9 56.6 30.5 61 30.5C65.4 30.5 68.9 26.9 68.9 22.5Z" fill="#CC092F"/>
+                <path d="M77 10.5H89.2C93.6 10.5 96.8 13.5 96.8 17.8C96.8 20.8 94.9 23.3 92.1 24.4L97.5 34.5H92.3L87.3 25.1H81.6V34.5H77V10.5ZM88.8 20.6C91.1 20.6 92.2 19.5 92.2 17.8C92.2 16.1 91.1 15 88.8 15H81.6V20.6H88.8Z" fill="#CC092F"/>
+                <path d="M100 10.5H112C118.8 10.5 123.5 15.3 123.5 22.5C123.5 29.7 118.8 34.5 112 34.5H100V10.5ZM111.7 30C116.1 30 118.9 26.8 118.9 22.5C118.9 18.2 116.1 15 111.7 15H104.6V30H111.7Z" fill="#CC092F"/>
+                <path d="M138.5 35C131.6 35 126 29.4 126 22.5C126 15.6 131.6 10 138.5 10C143.5 10 147.8 13 149.6 17.3H142.8C141.7 15.2 140.2 14.5 138.5 14.5C134.1 14.5 130.6 18.1 130.6 22.5C130.6 26.9 134.1 30.5 138.5 30.5C140.3 30.5 141.8 29.8 142.8 27.7H149.6C147.8 32 143.5 35 138.5 35Z" fill="#CC092F"/>
+                <path d="M152.5 22.5C152.5 15.6 158.1 10 165 10C171.9 10 177.5 15.6 177.5 22.5C177.5 29.4 171.9 35 165 35C158.1 35 152.5 29.4 152.5 22.5ZM172.9 22.5C172.9 18.1 169.4 14.5 165 14.5C160.6 14.5 157.1 18.1 157.1 22.5C157.1 26.9 160.6 30.5 165 30.5C169.4 30.5 172.9 26.9 172.9 22.5Z" fill="#CC092F"/>
+                <path d="M181 10.5H187.2L194.2 24.6L201.2 10.5H207.4V34.5H202.8V17.8L196.2 30.8H192.2L185.6 17.8V34.5H181V10.5Z" fill="#CC092F"/>
+            </svg>
+            <div class="doc-title">CA Test Data Manager (TDM) — Javelin</div>
+            <div class="doc-subtitle">Custom MongoDB Extension Integration & Validation Guide</div>
+        </div>
+        <div style="text-align: right;">
+            <div class="badge-tag">Custom Integration</div>
+            <div style="font-size: 11px; color: var(--bcom-slate); margin-top: 6px;">Target: .NET 4.6.1 / Javelin x64</div>
+        </div>
+    </div>
+
+    <!-- Metadata Banner -->
+    <div class="meta-banner">
+        <div class="meta-item">
+            <span class="meta-label">Product</span>
+            <span class="meta-value">Broadcom CA TDM Javelin</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Assembly</span>
+            <span class="meta-value">GridTools.Javelin.MongoDbActivities.dll</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Driver Version</span>
+            <span class="meta-value">MongoDB .NET Driver 2.19.0</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Authentication</span>
+            <span class="meta-value">Standalone, SCRAM, Atlas SRV, X.509</span>
+        </div>
+    </div>
+
+    <!-- Executive Summary -->
+    <div class="section-header">
+        <div class="section-num">1</div>
+        <div class="section-title">Overview & Architecture</div>
+    </div>
+
+    <p>
+        The <strong>GridTools.Javelin.MongoDbActivities</strong> extension integrates MongoDB directly into CA Test Data Manager (TDM) Javelin workflows. Built natively on Windows Workflow Foundation (WF4) and inheriting from <code>JavelinNativeActivity</code>, it enables automation teams to query, seed, mask, aggregate, and teardown document-based datasets alongside standard relational databases (Oracle, SQL Server, DB2).
+    </p>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-header">
+                <span>Core Capabilities</span>
+                <span class="card-badge">Key Features</span>
+            </div>
+            <ul style="padding-left: 18px; color: var(--bcom-slate); font-size: 12.5px;">
+                <li><strong>Native DataTable Interoperability:</strong> Automatically converts MongoDB BSON documents into standard ADO.NET DataTables for Javelin loops, CSV exports, and relational syncing.</li>
+                <li><strong>TDM Password Decryption:</strong> Seamlessly resolves encrypted Javelin password tokens (<code>%password_var%</code>) in connection strings and JSON filters.</li>
+                <li><strong>Direct BSON/JSON Support:</strong> Flexible single-quote relaxed JSON syntax (e.g., <code>"{'status': 'ACTIVE'}"</code>).</li>
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <span>Enterprise Security & Topology</span>
+                <span class="card-badge">Connectivity</span>
+            </div>
+            <ul style="padding-left: 18px; color: var(--bcom-slate); font-size: 12.5px;">
+                <li><strong>MongoDB Atlas Support:</strong> Full DNS Seedlist support via <code>mongodb+srv://</code> URIs.</li>
+                <li><strong>Authentication Schemes:</strong> Supports SCRAM-SHA-1, SCRAM-SHA-256, MONGODB-CR, and X.509 Certificates.</li>
+                <li><strong>Connection Pooling:</strong> Concurrent client caching ensuring high throughput and minimal socket exhaustion during heavy workflow execution.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Installation & Deployment -->
+    <div class="section-header">
+        <div class="section-num">2</div>
+        <div class="section-title">Installation & Setup</div>
+    </div>
+
+    <div class="callout warning">
+        <div class="callout-title">Important Dependency Layout</div>
+        Javelin resolves assemblies directly from its <code>Extensions</code> folder. All companion DLLs must be placed <strong>flat</strong> inside the <code>Extensions</code> directory (not in subfolders).
+    </div>
+
+    <ul class="step-list">
+        <li class="step-item">
+            <div class="step-title">Deploy DLLs to Javelin</div>
+            <div>Copy the 12 compiled library files from the <code>dist/</code> folder directly into:</div>
+            <pre><code>C:\Program Files (x86)\Grid-Tools\Javelin\Extensions\</code></pre>
+            <div style="font-size: 12px; color: var(--bcom-slate);">Required files: <code>GridTools.Javelin.MongoDbActivities.dll</code>, <code>MongoDB.Driver.dll</code>, <code>MongoDB.Driver.Core.dll</code>, <code>MongoDB.Bson.dll</code>, <code>MongoDB.Libmongocrypt.dll</code>, <code>DnsClient.dll</code>, <code>SharpCompress.dll</code>, <code>Snappier.dll</code>, <code>ZstdSharp.dll</code>, <code>Microsoft.Bcl.AsyncInterfaces.dll</code>, <code>Microsoft.Extensions.Logging.Abstractions.dll</code>, <code>System.Buffers.dll</code>.</div>
+        </li>
+        <li class="step-item">
+            <div class="step-title">Unblock Transferred Binaries (Windows Security Zone)</div>
+            <div>Open PowerShell as Administrator on the Javelin machine and execute:</div>
+            <pre><code>Unblock-File "C:\Program Files (x86)\Grid-Tools\Javelin\Extensions\*.dll"</code></pre>
+        </li>
+        <li class="step-item">
+            <div class="step-title">Import into Javelin Designer</div>
+            <div>Open Javelin &rarr; <strong>File</strong> &rarr; <strong>Options</strong> &rarr; <strong>Extensions</strong> (or click <strong>Import Extension</strong>).</div>
+            <div>Select <code>GridTools.Javelin.MongoDbActivities.dll</code>, verify the 6 detected activities, set the Category name to <strong><code>MongoDB Activities</code></strong>, and click <strong>Import Selected</strong>.</div>
+        </li>
+    </ul>
+
+    <!-- Connection String & Authentication Guide -->
+    <div class="section-header">
+        <div class="section-num">3</div>
+        <div class="section-title">Connection Strings & Authentication Patterns</div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 25%;">Deployment Scenario</th>
+                    <th style="width: 45%;">Connection String Format</th>
+                    <th style="width: 30%;">Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Local Standalone (No Auth)</strong></td>
+                    <td><code>"mongodb://localhost:27017"</code></td>
+                    <td>Default local development / test harness.</td>
+                </tr>
+                <tr>
+                    <td><strong>Standard Auth (SCRAM)</strong></td>
+                    <td><code>"mongodb://admin:%mongo_pass%@server01:27017/?authSource=admin"</code></td>
+                    <td>Uses Javelin's encrypted password variable <code>%mongo_pass%</code>.</td>
+                </tr>
+                <tr>
+                    <td><strong>Replica Set (High Availability)</strong></td>
+                    <td><code>"mongodb://user:pass@node1:27017,node2:27017,node3:27017/?replicaSet=rs0&authSource=admin"</code></td>
+                    <td>Automatically routes reads/writes and handles primary failover.</td>
+                </tr>
+                <tr>
+                    <td><strong>MongoDB Atlas / Cloud (SRV)</strong></td>
+                    <td><code>"mongodb+srv://tdm_user:%atlas_pwd%@cluster0.abcde.mongodb.net/?retryWrites=true&w=majority"</code></td>
+                    <td>Requires SSL (TLS 1.2+). Resolved seamlessly via embedded <code>DnsClient.dll</code>.</td>
+                </tr>
+                <tr>
+                    <td><strong>SSL / TLS Enabled</strong></td>
+                    <td><code>"mongodb://user:pass@mongo-sec:27017/?ssl=true&sslVerifyCertificate=false&authSource=admin"</code></td>
+                    <td>Set <code>sslVerifyCertificate=false</code> if using internal self-signed CA certificates.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Activities Reference & Test Cases -->
+    <div class="section-header">
+        <div class="section-num">4</div>
+        <div class="section-title">Activity Reference & Test Scenarios</div>
+    </div>
+
+    <!-- Activity 1 -->
+    <div class="card" style="margin-bottom: 16px;">
+        <div class="card-header">
+            <span>1. MongoDB Find (<code>MongoFindActivity</code>)</span>
+            <span class="card-badge" style="background:#EFF6FF; color:#1E40AF;">Query / Extraction</span>
+        </div>
+        <p style="color: var(--bcom-slate); font-size: 12.5px; margin-bottom: 8px;">
+            Queries documents from a collection with support for filtering, projection (column selection), sorting, and pagination. Outputs both a standard Javelin <code>DataTable</code> and a formatted JSON array.
+        </p>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Property</th>
+                        <th>Type / Direction</th>
+                        <th>Example Value</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="param-name">ConnectionString</span></td>
+                        <td><span class="param-type">In / String</span></td>
+                        <td><code>"mongodb://localhost:27017"</code></td>
+                        <td>Target MongoDB instance URI.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">DatabaseName</span></td>
+                        <td><span class="param-type">In / String</span></td>
+                        <td><code>"sample_mflix"</code></td>
+                        <td>Target database name.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">CollectionName</span></td>
+                        <td><span class="param-type">In / String</span></td>
+                        <td><code>"movies"</code></td>
+                        <td>Collection to query.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">FilterJson</span></td>
+                        <td><span class="param-type">In / String</span></td>
+                        <td><code>"{'genres': 'Action', 'year': {'$gte': 2000}, 'imdb.rating': {'$gte': 8.0}}"</code></td>
+                        <td>BSON query filter. Use <code>"{}"</code> for all documents.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">ProjectionJson</span></td>
+                        <td><span class="param-type">In / String</span></td>
+                        <td><code>"{'_id': 0, 'title': 1, 'year': 1, 'imdb.rating': 1, 'runtime': 1}"</code></td>
+                        <td>Fields to include (<code>1</code>) or exclude (<code>0</code>). Excludes <code>_id</code> if set to 0.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">SortJson</span></td>
+                        <td><span class="param-type">In / String</span></td>
+                        <td><code>"{'imdb.rating': -1}"</code></td>
+                        <td>Sort criteria (<code>-1</code> descending, <code>1</code> ascending).</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">Limit</span> / <span class="param-name">Skip</span></td>
+                        <td><span class="param-type">In / Int32</span></td>
+                        <td><code>10</code> / <code>0</code></td>
+                        <td>Maximum records to return and records to offset.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">OutDataTable</span></td>
+                        <td><span class="param-type">Out / DataTable</span></td>
+                        <td>Variable: <code>dtMovies</code></td>
+                        <td>Populated ADO.NET DataTable ready for loops or CSV export.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">OutJson</span></td>
+                        <td><span class="param-type">Out / String</span></td>
+                        <td>Variable: <code>jsonMovies</code></td>
+                        <td>Canonical Extended JSON array of matching documents.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">OutCount</span></td>
+                        <td><span class="param-type">Out / Int64</span></td>
+                        <td>Variable: <code>movieCount</code></td>
+                        <td>Total number of documents returned.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Activity 2 -->
+    <div class="card" style="margin-bottom: 16px;">
+        <div class="card-header">
+            <span>2. MongoDB Insert (<code>MongoInsertActivity</code>)</span>
+            <span class="card-badge" style="background:#ECFDF5; color:#065F46;">Data Seeding</span>
+        </div>
+        <p style="color: var(--bcom-slate); font-size: 12.5px; margin-bottom: 8px;">
+            Inserts one or multiple documents into a MongoDB collection. Can accept a raw JSON string (single object or array) or an entire Javelin <code>DataTable</code> for bulk relational-to-document migration.
+        </p>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Property</th>
+                        <th>Type / Direction</th>
+                        <th>Example Value</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="param-name">ConnectionString</span></td>
+                        <td><span class="param-type">In / String</span></td>
+                        <td><code>"mongodb://localhost:27017"</code></td>
+                        <td>MongoDB Connection URI.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">DatabaseName</span> / <span class="param-name">CollectionName</span></td>
+                        <td><span class="param-type">In / String</span></td>
+                        <td><code>"testdb"</code> / <code>"tdm_customers"</code></td>
+                        <td>Destination database and collection.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">DocumentJson</span></td>
+                        <td><span class="param-type">In / String</span></td>
+                        <td><code>"[{'customerId': 101, 'name': 'Alice Smith', 'tier': 'Gold', 'balance': 1500.50}, {'customerId': 102, 'name': 'Bob Jones', 'tier': 'Silver', 'balance': 450.00}]"</code></td>
+                        <td>JSON object or array to insert.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">InputDataTable</span></td>
+                        <td><span class="param-type">In / DataTable</span></td>
+                        <td><code>dtSourceData</code> (optional)</td>
+                        <td>If provided, converts all rows into documents and batch inserts them.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">InsertedCount</span></td>
+                        <td><span class="param-type">Out / Int32</span></td>
+                        <td>Variable: <code>insertedCount</code></td>
+                        <td>Number of documents inserted.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">InsertedIdsJson</span></td>
+                        <td><span class="param-type">Out / String</span></td>
+                        <td>Variable: <code>idsJson</code></td>
+                        <td>JSON array containing the generated <code>_id</code> values.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Activity 3 -->
+    <div class="card" style="margin-bottom: 16px;">
+        <div class="card-header">
+            <span>3. MongoDB Update (<code>MongoUpdateActivity</code>)</span>
+            <span class="card-badge" style="background:#FFFBEB; color:#92400E;">Data Masking / State Mutation</span>
+        </div>
+        <p style="color: var(--bcom-slate); font-size: 12.5px; margin-bottom: 8px;">
+            Updates documents matching a filter using standard MongoDB update operators (<code>$set</code>, <code>$inc</code>, <code>$unset</code>, <code>$push</code>). Supports <code>IsUpdateMany</code> and <code>IsUpsert</code>.
+        </p>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Property</th>
+                        <th>Type / Direction</th>
+                        <th>Example Value</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="param-name">FilterJson</span></td>
+                        <td><span class="param-type">In / String</span></td>
+                        <td><code>"{'customerId': 102}"</code></td>
+                        <td>Filter identifying which document(s) to update.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">UpdateJson</span></td>
+                        <td><span class="param-type">In / String</span></td>
+                        <td><code>"{'$set': {'tier': 'Platinum', 'status': 'ACTIVE'}, '$inc': {'balance': 500}}"</code></td>
+                        <td>MongoDB update instructions.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">IsUpdateMany</span></td>
+                        <td><span class="param-type">In / Boolean</span></td>
+                        <td><code>False</code> (or <code>True</code>)</td>
+                        <td><code>False</code> updates the first matching document; <code>True</code> updates all matches.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">IsUpsert</span></td>
+                        <td><span class="param-type">In / Boolean</span></td>
+                        <td><code>False</code> (or <code>True</code>)</td>
+                        <td>If <code>True</code>, creates a new document when no match is found.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">MatchedCount</span> / <span class="param-name">ModifiedCount</span></td>
+                        <td><span class="param-type">Out / Int64</span></td>
+                        <td>Variables: <code>matched</code>, <code>modified</code></td>
+                        <td>Number of matched and actually changed records.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Activity 4 -->
+    <div class="card" style="margin-bottom: 16px;">
+        <div class="card-header">
+            <span>4. MongoDB Aggregate (<code>MongoAggregateActivity</code>)</span>
+            <span class="card-badge" style="background:#F3E8FF; color:#6B21A8;">Analytics / Pipelines</span>
+        </div>
+        <p style="color: var(--bcom-slate); font-size: 12.5px; margin-bottom: 8px;">
+            Executes multi-stage aggregation pipelines for complex analytics, group summaries, lookups, and unwinding nested arrays.
+        </p>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Property</th>
+                        <th>Type / Direction</th>
+                        <th>Example Value</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="param-name">PipelineJson</span></td>
+                        <td><span class="param-type">In / String</span></td>
+                        <td><code>"[{'$unwind': '$genres'}, {'$group': {'_id': '$genres', 'totalMovies': {'$sum': 1}, 'avgRating': {'$avg': '$imdb.rating'}}}, {'$sort': {'totalMovies': -1}}, {'$limit': 5}]"</code></td>
+                        <td>Array of pipeline stages (<code>$match</code>, <code>$group</code>, <code>$sort</code>, <code>$lookup</code>, etc.).</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">OutDataTable</span></td>
+                        <td><span class="param-type">Out / DataTable</span></td>
+                        <td>Variable: <code>dtAggResults</code></td>
+                        <td>Tabular aggregated result set.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">OutJson</span></td>
+                        <td><span class="param-type">Out / String</span></td>
+                        <td>Variable: <code>jsonAggResults</code></td>
+                        <td>Aggregated results formatted in JSON.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Activity 5 & 6 -->
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-header">
+                <span>5. MongoDB Delete (<code>MongoDeleteActivity</code>)</span>
+                <span class="card-badge" style="background:#FEE2E2; color:#991B1B;">Teardown</span>
+            </div>
+            <p style="color: var(--bcom-slate); font-size: 12px; margin-bottom: 6px;">Removes documents matching filter criteria.</p>
+            <div style="font-size: 12px;">
+                <strong>FilterJson:</strong> <code>"{'customerId': {'$in': [101, 102, 103]}}"</code><br>
+                <strong>IsDeleteMany:</strong> <code>True</code><br>
+                <strong>DeletedCount (Out):</strong> Variable: <code>deletedCount</code>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span>6. Execute Command (<code>MongoExecuteCommandActivity</code>)</span>
+                <span class="card-badge" style="background:#E0E7FF; color:#3730A3;">Admin</span>
+            </div>
+            <p style="color: var(--bcom-slate); font-size: 12px; margin-bottom: 6px;">Runs administrative database commands.</p>
+            <div style="font-size: 12px;">
+                <strong>DatabaseName:</strong> <code>"admin"</code> (or target DB)<br>
+                <strong>CommandJson:</strong> <code>"{'ping': 1}"</code> or <code>"{'drop': 'temp_coll'}"</code><br>
+                <strong>IsOk (Out):</strong> <code>True</code> | <strong>ResponseJson:</strong> <code>{"ok": 1.0}</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debugging & Troubleshooting in Javelin -->
+    <div class="section-header">
+        <div class="section-num">5</div>
+        <div class="section-title">Debugging & Printing Outputs in Javelin Workflows</div>
+    </div>
+
+    <p style="color: var(--bcom-slate); margin-bottom: 10px;">
+        Javelin expressions use <strong>VB.NET syntax</strong>. Below are convenient one-liners you can use in <strong>Log Message</strong> or <strong>WriteLine</strong> activities to inspect results during test execution:
+    </p>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 30%;">Inspection Goal</th>
+                    <th style="width: 70%;">VB.NET Expression (for Javelin Log Message / WriteLine)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Print Full JSON Results</strong></td>
+                    <td><code>jsonMovies</code> <em>(Uses the <code>OutJson</code> property directly)</em></td>
+                </tr>
+                <tr>
+                    <td><strong>Print DataTable as Delimited Text</strong></td>
+                    <td><code>String.Join(Environment.NewLine, From row In dtMovies.Rows.Cast(Of System.Data.DataRow)() Select String.Join(" | ", row.ItemArray))</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Print Row Count & Column Names</strong></td>
+                    <td><code>"Rows: " & dtMovies.Rows.Count.ToString() & " | Columns: " & String.Join(", ", From col In dtMovies.Columns.Cast(Of System.Data.DataColumn)() Select col.ColumnName)</code></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div>&copy; 2026 Broadcom. All rights reserved. CA Test Data Manager &trade;</div>
+        <div>CONFIDENTIAL &mdash; FOR CUSTOMER VALIDATION USE ONLY</div>
+    </div>
+
+</div>
+
+</body>
+</html>

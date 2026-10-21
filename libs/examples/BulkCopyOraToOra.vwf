@@ -1,0 +1,70 @@
+﻿<Flowchart mc:Ignorable="sap sap2010 sads" sap2010:WorkflowViewState.IdRef="Flowchart_1"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:av="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:gjd="clr-namespace:GridTools.Javelin.Designer;assembly=Javelin"
+ xmlns:gjdd="clr-namespace:GridTools.Javelin.Designer.DbActivities;assembly=GridTools.Javelin.Designer.DbActivities"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:s="clr-namespace:System;assembly=mscorlib"
+ xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+ xmlns:sd="clr-namespace:System.Data;assembly=System.Data"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Flowchart.Variables>
+    <x:Reference>__ReferenceID0</x:Reference>
+  </Flowchart.Variables>
+  <Flowchart.StartNode>
+    <x:Reference>__ReferenceID1</x:Reference>
+  </Flowchart.StartNode>
+  <FlowStep x:Name="__ReferenceID1" sap2010:WorkflowViewState.IdRef="FlowStep_1">
+    <gjd:JGuid.JGuid>
+      <s:Guid>a5475f97-2a95-460c-ac48-3bd17f01f641</s:Guid>
+    </gjd:JGuid.JGuid>
+    <gjdd:DataReaderActivity AdditionalConnectionParameters="{x:Null}" CommandTimeout="{x:Null}" ContinueOnError="{x:Null}" OdbcConnectionString="{x:Null}" OleDbConnectionString="{x:Null}" Timeout="{x:Null}" Database="GTREP31" DisplayName="Read data from GTREP31.GTREP_PUBLISH_JOB" sap2010:WorkflowViewState.IdRef="DataReaderActivity_1" IntegratedSecurity="False" Password="M9FMZx9jqa2qQirvzvYzeJ3l62qeSQC9J4Gh6GaWM1Yc" Provider="oracle" Query="select * FROM GTREP31.GTREP_PUBLISH_JOB" Schema="GTREP31" Server="localhost" ServiceName="ShashOra" Username="GTREP31">
+      <gjdd:DataReaderActivity.Children>
+        <gjdd:OracleBulkCopyActivity AdditionalConnectionParameters="{x:Null}" BatchSize="{x:Null}" BulkCopyTimeout="{x:Null}" ColumnMappings="{x:Null}" ContinueOnError="{x:Null}" Timeout="{x:Null}" DestinationTableName="CREDITCARD.GTREP_PUBLISH_JOB" DisplayName="Oracle Bulk Copy: GTREP31.GTREP_PUBLISH_JOB" sap2010:WorkflowViewState.IdRef="OracleBulkCopyActivity_1" Password="/afdGPGNFqtzIFzx6jVmWJvfyBhwsFIVjqD4trrDx4zOo3MmMBEp" Server="localhost" ServiceName="ShashORA" Username="CREDITCARD">
+          <gjdd:OracleBulkCopyActivity.InDataReader>
+            <InArgument x:TypeArguments="sd:IDataReader">
+              <VariableValue x:TypeArguments="sd:IDataReader">
+                <VariableValue.Variable>
+                  <Variable x:TypeArguments="sd:IDataReader" x:Name="__ReferenceID0" Name="outDataReader" />
+                </VariableValue.Variable>
+              </VariableValue>
+            </InArgument>
+          </gjdd:OracleBulkCopyActivity.InDataReader>
+        </gjdd:OracleBulkCopyActivity>
+      </gjdd:DataReaderActivity.Children>
+      <gjdd:DataReaderActivity.OutDataReader>
+        <OutArgument x:TypeArguments="sd:IDataReader">
+          <VariableReference x:TypeArguments="sd:IDataReader" Variable="{x:Reference __ReferenceID0}" />
+        </OutArgument>
+      </gjdd:DataReaderActivity.OutDataReader>
+    </gjdd:DataReaderActivity>
+  </FlowStep>
+  <sap2010:WorkflowViewState.ViewStateManager>
+    <sap2010:ViewStateManager>
+      <sap2010:ViewStateData Id="OracleBulkCopyActivity_1" sap:VirtualizedContainerService.HintSize="207,55" />
+      <sap2010:ViewStateData Id="DataReaderActivity_1" sap:VirtualizedContainerService.HintSize="221,341" />
+      <sap2010:ViewStateData Id="FlowStep_1">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">55.5,184.5</av:Point>
+            <av:Size x:Key="ShapeSize">289,51</av:Size>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Flowchart_1" sap:VirtualizedContainerService.HintSize="614,636">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
+            <av:Point x:Key="ShapeLocation">270,2.5</av:Point>
+            <av:Size x:Key="ShapeSize">60,75</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">300,77.5 300,107.5 374.5,107.5 374.5,210 344.5,210</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+    </sap2010:ViewStateManager>
+  </sap2010:WorkflowViewState.ViewStateManager>
+  <sads:DebugSymbol.Symbol>dzhDOlxVc2Vyc1xzaGFzaGFua1xEZXNrdG9wXEphdmVsaW5fRmxvd3NcQkNQX09yYVRvT3JhLnZ3ZhIBAUYNAQEYBSsfAQIYrgMYtgMBCxjuAxj3AwEKKAsoaQEJGJcEGKEEAQgYqwQYtAQBBxi9AxjmAwEGGP8DGIoEAQUY9gIYpAMBBBjaARjjAQEDGgkkJwEMGt0BGvsBARIa0AMa2gMBERrkAxrwAwEQGrgDGsMDAQ8a+gIasAMBDh0PIR8BDQ==</sads:DebugSymbol.Symbol>
+</Flowchart>

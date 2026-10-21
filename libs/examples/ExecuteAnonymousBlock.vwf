@@ -1,0 +1,116 @@
+﻿<Flowchart mc:Ignorable="sap sap2010 sads" sap2010:WorkflowViewState.IdRef="Flowchart_1"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:av="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:gjce="clr-namespace:GridTools.Javelin.Common.Editors;assembly=GridTools.Javelin.Common"
+ xmlns:gjd="clr-namespace:GridTools.Javelin.Designer;assembly=Javelin"
+ xmlns:gjdd="clr-namespace:GridTools.Javelin.Designer.DbActivities;assembly=GridTools.Javelin.Designer.DbActivities"
+ xmlns:gjdf="clr-namespace:GridTools.Javelin.Designer.FileSystemActivities;assembly=GridTools.Javelin.Designer.FileSystemActivities"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:s="clr-namespace:System;assembly=mscorlib"
+ xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+ xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=mscorlib"
+ xmlns:sd="clr-namespace:System.Data;assembly=System.Data"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <TextExpression.Namespaces>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System.Activities</x:String>
+    </sco:Collection>
+  </TextExpression.Namespaces>
+  <TextExpression.References>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Activities</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.References>
+  <Flowchart.Variables>
+    <Variable x:TypeArguments="x:String" Name="plsqlblock" />
+    <Variable x:TypeArguments="sd:DataTable" Name="outDataTable" />
+  </Flowchart.Variables>
+  <Flowchart.StartNode>
+    <x:Reference>__ReferenceID1</x:Reference>
+  </Flowchart.StartNode>
+  <FlowStep x:Name="__ReferenceID1" sap2010:WorkflowViewState.IdRef="FlowStep_2">
+    <gjd:JGuid.JGuid>
+      <s:Guid>09f8a877-567e-4dba-b5c4-4e141b2e659c</s:Guid>
+    </gjd:JGuid.JGuid>
+    <gjdf:FileActivity Content="{x:Null}" ContinueOnError="{x:Null}" TargetPath="{x:Null}" Timeout="{x:Null}" overwriteIfFileExists="{x:Null}" Action="ReadAllText" sap2010:WorkflowViewState.IdRef="FileActivity_1" Path="C:\Users\shashank\Desktop\PLSQLBlock.txt" ReadText="[plsqlblock]" ThrowErrorIfFileNotExists="True" />
+    <FlowStep.Next>
+      <FlowStep x:Name="__ReferenceID0" sap2010:WorkflowViewState.IdRef="FlowStep_4">
+        <gjd:JGuid.JGuid>
+          <s:Guid>30a52f49-b14d-4458-964b-8455ee601b3f</s:Guid>
+        </gjd:JGuid.JGuid>
+        <gjdd:OraclePLSQLActivity ConnectionString="{x:Null}" ContinueOnError="{x:Null}" Timeout="{x:Null}" sap2010:WorkflowViewState.IdRef="OraclePLSQLActivity_2" Password="uvB6uPva7LYGo7WqjJHKQ17xejq/WOfgkJOpqdyr+qfPE38l" Port="1521" Query="[plsqlblock]" Server="localhost" ServiceName="ShashORA" Username="GT_TARGET">
+          <gjdd:OraclePLSQLActivity.StoredProcArguments>
+            <scg:List x:TypeArguments="gjce:StoredProcedureArgument" Capacity="16">
+              <gjce:StoredProcedureArgument ParameterName="empid" ParameterValue="123" />
+              <gjce:StoredProcedureArgument ParameterName="fname" ParameterValue="Don" />
+              <gjce:StoredProcedureArgument ParameterName="lname" ParameterValue="G" />
+              <gjce:StoredProcedureArgument ParameterName="email" ParameterValue="g.donal@ca.com" />
+              <gjce:StoredProcedureArgument ParameterName="username" ParameterValue="dong" />
+              <gjce:StoredProcedureArgument ParameterName="city" ParameterValue="Sterling" />
+              <gjce:StoredProcedureArgument ParameterName="state" ParameterValue="VA" />
+              <gjce:StoredProcedureArgument ParameterName="age" ParameterValue="35" />
+              <gjce:StoredProcedureArgument ParameterName="salary" ParameterValue="12000" />
+              <gjce:StoredProcedureArgument ParameterName="test_lock" ParameterValue="LK" />
+              <gjce:StoredProcedureArgument ParameterName="test_name" ParameterValue="~T1~" />
+              <gjce:StoredProcedureArgument ParameterName="test_user" ParameterValue="~USER1~" />
+              <gjce:StoredProcedureArgument ParameterName="expected_result" ParameterValue="ER1" />
+              <gjce:StoredProcedureArgument ParameterName="jb_id" ParameterValue="1111" />
+              <gjce:StoredProcedureArgument ParameterName="emp_id" ParameterValue="321" />
+            </scg:List>
+          </gjdd:OraclePLSQLActivity.StoredProcArguments>
+        </gjdd:OraclePLSQLActivity>
+      </FlowStep>
+    </FlowStep.Next>
+  </FlowStep>
+  <x:Reference>__ReferenceID0</x:Reference>
+  <sap2010:WorkflowViewState.ViewStateManager>
+    <sap2010:ViewStateManager>
+      <sap2010:ViewStateData Id="FileActivity_1" sap:VirtualizedContainerService.HintSize="200,82">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="OraclePLSQLActivity_2" sap:VirtualizedContainerService.HintSize="219,259">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_4">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">40.5,260.5</av:Point>
+            <av:Size x:Key="ShapeSize">219,259</av:Size>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_2">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">200,129</av:Point>
+            <av:Size x:Key="ShapeSize">200,82</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">300,211 300,241 150,241 150,260.5</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Flowchart_1" sap:VirtualizedContainerService.HintSize="678,636">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
+            <av:Point x:Key="ShapeLocation">270,2.5</av:Point>
+            <av:Size x:Key="ShapeSize">60,75</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">300,77.5 300,129</av:PointCollection>
+            <x:Double x:Key="Width">663.5</x:Double>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+    </sap2010:ViewStateManager>
+  </sap2010:WorkflowViewState.ViewStateManager>
+  <sads:DebugSymbol.Symbol>d0pDOlxVc2Vyc1xkb3ZtYTAyXERvY3VtZW50c1xKYXZlbGluXEphdmVsaW5fRmxvd3NcRXhlY3V0ZUFub255bW91c0Jsb2NrLnZ3ZgwBAXQNAQEmBSbBAgEKLAlAJAECJtsBJoUCAQ4mjwImnQIBDCa4Aia+AgELLKECLKsCAQkstQIswAIBCCzmASzsAQEHLPMBLIECAQUsiQIslAIBBCyuASzgAQED</sads:DebugSymbol.Symbol>
+</Flowchart>

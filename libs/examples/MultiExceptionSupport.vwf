@@ -1,0 +1,442 @@
+﻿<Flowchart mc:Ignorable="sap sap2010 sads" sap2010:WorkflowViewState.IdRef="Flowchart_1"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:av="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:gjc="clr-namespace:GridTools.Javelin.Common;assembly=GridTools.Javelin.Common"
+ xmlns:gjd="clr-namespace:GridTools.Javelin.Designer;assembly=Javelin"
+ xmlns:gjdd="clr-namespace:GridTools.Javelin.Designer.DbActivities;assembly=GridTools.Javelin.Designer.DbActivities"
+ xmlns:gjdf="clr-namespace:GridTools.Javelin.Designer.FileSystemActivities;assembly=GridTools.Javelin.Designer.FileSystemActivities"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:s="clr-namespace:System;assembly=mscorlib"
+ xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+ xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=mscorlib"
+ xmlns:sd="clr-namespace:System.Data;assembly=System.Data"
+ xmlns:sds="clr-namespace:System.Data.SqlClient;assembly=System.Data"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <TextExpression.Namespaces>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System.Data</x:String>
+      <x:String>System.Xml.Serialization</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Xml</x:String>
+      <x:String>System.Xml.XPath</x:String>
+      <x:String>System.Data.SqlClient</x:String>
+      <x:String>System.Data.Common</x:String>
+    </sco:Collection>
+  </TextExpression.Namespaces>
+  <TextExpression.References>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.DataSetExtensions</AssemblyReference>
+      <AssemblyReference>System.Xml</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.ServiceModel</AssemblyReference>
+      <AssemblyReference>System.Runtime.Serialization</AssemblyReference>
+      <AssemblyReference>System.Xml.Linq</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.References>
+  <Flowchart.Variables>
+    <Variable x:TypeArguments="sd:DataTable" Name="CloneMapping" />
+    <Variable x:TypeArguments="x:String" Name="Database">
+      <Variable.Default>
+        <Literal x:TypeArguments="x:String" Value="" />
+      </Variable.Default>
+    </Variable>
+    <Variable x:TypeArguments="x:String" Name="T_key_column_value" />
+    <Variable x:TypeArguments="x:String" Name="S_key_column_value" />
+    <Variable x:TypeArguments="x:String" Name="S_XML" />
+    <Variable x:TypeArguments="x:String" Default="1900" Name="Pub_Job_ID" />
+    <Variable x:TypeArguments="x:String" Name="TDMProfilesList" />
+    <Variable x:TypeArguments="x:String" Default="C:\capoc\A_XML_MOVEMENT\exception.txt" Name="exfile" />
+    <Variable x:TypeArguments="x:String" Name="XML_Column_Name" />
+    <Variable x:TypeArguments="x:String" Name="Date_Created" />
+    <Variable x:TypeArguments="x:String" Name="Date_Moved" />
+    <Variable x:TypeArguments="x:String" Name="Date_XML_Modified" />
+    <Variable x:TypeArguments="sd:DataRow" Name="dr" />
+    <Variable x:TypeArguments="x:String" Name="var_XMLDATA" />
+    <Variable x:TypeArguments="x:String" Name="SubmitString" />
+    <Variable x:TypeArguments="x:String" Name="var_Column1" />
+    <Variable x:TypeArguments="sds:SqlException" Name="sqlException1" />
+  </Flowchart.Variables>
+  <Flowchart.StartNode>
+    <x:Reference>__ReferenceID1</x:Reference>
+  </Flowchart.StartNode>
+  <FlowStep x:Name="__ReferenceID1" sap2010:WorkflowViewState.IdRef="FlowStep_1">
+    <gjd:JGuid.JGuid>
+      <s:Guid>1c5387ae-f866-4163-8ed9-00b0dc5b3e51</s:Guid>
+    </gjd:JGuid.JGuid>
+    <gjdd:SqlServerActivity CommandTimeOut="{x:Null}" ConnectionString="{x:Null}" ContinueOnError="{x:Null}" Delimiter="{x:Null}" Timeout="{x:Null}" DatabaseName="CATDM_DataMart" DisplayName="Get reference Lookup Values" sap2010:WorkflowViewState.IdRef="SqlServerActivity_1" OutDataTable="[CloneMapping]" Password="AiLo2lgywgQ3sEuJSpLRMQEDW4fLXDrywObgQuqh8CEt" Query="[&quot;SELECT PUB_JOB_ID,PUB_JOB_NAME,TableName,Key_column_name,S_Profile_name ,T_Profile_name ,S_key_column_value,T_key_column_value ,Date_Created ,Date_Moved,Date_XML_Modified,Old_Policy_Number,Database_Name,XML_Column_Name,Move_Status,XMLSize,New_Policy_Number  FROM dbo.XML_Cross_Reference where PUB_JOB_ID=&quot; &amp; Pub_Job_ID]" Server="GZSB-SQLSA007" Username="TDM_USER" />
+    <FlowStep.Next>
+      <FlowStep x:Name="__ReferenceID0" sap2010:WorkflowViewState.IdRef="FlowStep_2">
+        <gjd:JGuid.JGuid>
+          <s:Guid>78493126-208b-4909-a4fe-d5d780685bc6</s:Guid>
+        </gjd:JGuid.JGuid>
+        <ForEach x:TypeArguments="sd:DataRow" sap2010:WorkflowViewState.IdRef="ForEach`1_1" Values="[CloneMapping.select()]">
+          <ActivityAction x:TypeArguments="sd:DataRow">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="sd:DataRow" Name="item" />
+            </ActivityAction.Argument>
+            <Sequence sap2010:WorkflowViewState.IdRef="Sequence_3">
+              <Sequence sap2010:WorkflowViewState.IdRef="Sequence_1">
+                <Sequence.Variables>
+                  <Variable x:TypeArguments="x:String" Name="SQLQueryList" />
+                  <Variable x:TypeArguments="x:String" Name="S_PolicyNumber" />
+                  <Variable x:TypeArguments="x:String" Name="T_PolicyNumber" />
+                  <Variable x:TypeArguments="x:String" Name="XMLSize" />
+                  <Variable x:TypeArguments="x:String" Name="S_Table_Name" />
+                  <Variable x:TypeArguments="x:String" Name="Key_column_name" />
+                  <Variable x:TypeArguments="x:String" Name="Database_Name" />
+                  <Variable x:TypeArguments="x:String" Name="New_Policy_Number" />
+                  <Variable x:TypeArguments="x:String" Name="Move_Status" />
+                  <Variable x:TypeArguments="x:String" Name="S_Query" />
+                  <Variable x:TypeArguments="sd:DataTable" Name="XML_TABLE" />
+                  <Variable x:TypeArguments="x:String" Name="PUB_JOB_NAME" />
+                  <Variable x:TypeArguments="x:String" Name="variable2" />
+                  <Variable x:TypeArguments="x:String" Name="S_Profile_name" />
+                  <Variable x:TypeArguments="x:String" Name="T_Profile_name" />
+                  <Variable x:TypeArguments="x:Int32" Name="stringlen" />
+                </Sequence.Variables>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_11">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[PUB_JOB_ID]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[item.Item(0).ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_12">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[PUB_JOB_NAME]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[item.Item(1).ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_1">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[S_Table_Name]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[item.Item(2).ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_3">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[Key_column_name]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[item.Item(3).ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_13">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[S_Profile_name]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[item.Item(4).ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_14">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[T_Profile_name]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[item.Item(5).ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_2">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[S_key_column_value]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[item.Item(6).ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_4">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[T_key_column_value]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[item.Item(7).ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_15">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[Date_Created]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[item.Item(8).ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_16">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[Date_Moved]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[item.Item(9).ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_17">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[Date_XML_Modified]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[item.Item(10).ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_5">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[S_PolicyNumber]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[item.Item(11).ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_6">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[Database_Name]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[item.Item(12).ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_7">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[XML_Column_Name]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[item.Item(13).ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_8">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[Move_Status]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[item.Item(14).ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_9">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[XMLSize]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[item.Item(15).ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_10">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[New_Policy_Number]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">[item.Item(16).ToString()]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <gjdd:SqlServerActivity CommandTimeOut="{x:Null}" ConnectionString="{x:Null}" ContinueOnError="{x:Null}" Delimiter="{x:Null}" Timeout="{x:Null}" DatabaseName="ExampleData" DisplayName="Read XML from Source" sap2010:WorkflowViewState.IdRef="SqlServerActivity_2" OutDataTable="[XML_TABLE]" Password="w6mh3cMfTCmdAE1abv0W9kNmlMfD5m0pPcn3wih685bD" Query="[&quot;select &quot; &amp; XML_Column_Name &amp; &quot; From  &quot; &amp;  S_TABLE_NAME &amp;  &quot; where &quot; &amp; Key_column_name &amp; &quot;=&quot; &amp;  S_key_column_value]" Server="GZSI-SQLSA010" Username="TDM_USER" />
+                <ForEach x:TypeArguments="sd:DataRow" DisplayName="For Each Data Row" sap2010:WorkflowViewState.IdRef="ForEach`1_3" Values="[XML_Table.Select]">
+                  <ActivityAction x:TypeArguments="sd:DataRow">
+                    <ActivityAction.Argument>
+                      <DelegateInArgument x:TypeArguments="sd:DataRow" Name="dr" />
+                    </ActivityAction.Argument>
+                    <Sequence DisplayName="Assign DataTable Variables" sap2010:WorkflowViewState.IdRef="Sequence_2">
+                      <Assign DisplayName="Assign - XMLDATA" sap2010:WorkflowViewState.IdRef="Assign_20">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="x:String">[var_XMLDATA]</OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="x:String">[dr("XMLDATA").ToString()]</InArgument>
+                        </Assign.Value>
+                      </Assign>
+                    </Sequence>
+                  </ActivityAction>
+                </ForEach>
+                <Assign sap2010:WorkflowViewState.IdRef="Assign_27">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">[SubmitString]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String" xml:space="preserve">["update " &amp;  S_TABLE_NAME &amp; " set  " &amp; XML_Column_Name &amp; "="   &amp;  "cast(" &amp;  "'" &amp;  var_XMLDATA &amp;  "'" &amp;     " as nvarchar(max)) where " &amp; Key_column_name &amp; " = " &amp;  T_key_column_value &amp; ";"]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <TryCatch sap2010:WorkflowViewState.IdRef="TryCatch_1">
+                  <TryCatch.Try>
+                    <gjdd:SqlServerActivity CommandTimeOut="{x:Null}" ConnectionString="{x:Null}" ContinueOnError="{x:Null}" Delimiter="{x:Null}" OutDataTable="{x:Null}" Timeout="{x:Null}" DatabaseName="ExampleData" DisplayName="UpdateTarget" sap2010:WorkflowViewState.IdRef="SqlServerActivity_4" Password="fj6vOfYyCPph1MbGC0Svcmsu4Y+Yl/4jKtojLZx28++S" Query="[SubmitString]" Server="GZQA-SQLSA017" Username="TDM_USER" />
+                  </TryCatch.Try>
+                  <TryCatch.Catches>
+                    <Catch x:TypeArguments="sds:SqlException" sap2010:WorkflowViewState.IdRef="Catch`1_2">
+                      <ActivityAction x:TypeArguments="sds:SqlException">
+                        <ActivityAction.Argument>
+                          <DelegateInArgument x:TypeArguments="sds:SqlException" Name="exception" />
+                        </ActivityAction.Argument>
+                        <Sequence sap2010:WorkflowViewState.IdRef="Sequence_6">
+                          <Assign sap2010:WorkflowViewState.IdRef="Assign_28">
+                            <Assign.To>
+                              <OutArgument x:TypeArguments="x:String">[S_XML]</OutArgument>
+                            </Assign.To>
+                            <Assign.Value>
+                              <InArgument x:TypeArguments="x:String">[exception.Errors(0).Message]</InArgument>
+                            </Assign.Value>
+                          </Assign>
+                          <gjdf:FileActivity ContinueOnError="{x:Null}" ReadText="{x:Null}" Timeout="{x:Null}" Action="Append" Content="[S_XML]" sap2010:WorkflowViewState.IdRef="FileActivity_1" Path="[exfile]" />
+                          <gjdd:SqlServerActivity CommandTimeOut="{x:Null}" ConnectionString="{x:Null}" ContinueOnError="{x:Null}" Delimiter="{x:Null}" OutDataTable="{x:Null}" Timeout="{x:Null}" DatabaseName="CATDM_DataMart" DisplayName="RecordError" sap2010:WorkflowViewState.IdRef="SqlServerActivity_7" Password="Gj7bj7F1uNL53+/ms9c1SkTGUgWhC/99RoLOpmYV87gu" Query="[&quot; Update dbo.XML_Cross_Reference set Date_Moved =getdate(),Move_Status='Error' where PUB_JOB_ID=&quot; &amp; Pub_Job_ID &amp; &quot; and  TABLENAME = &quot; &amp;&quot;'&quot;&amp; S_TABLE_NAME &amp;&quot;'&quot;&amp; &quot; and S_key_column_value =&quot; &amp; S_key_column_value]" Server="GZSB-SQLSA007" Username="TDM_USER" />
+                          <TerminateWorkflow Exception="[exception]" sap2010:WorkflowViewState.IdRef="TerminateWorkflow_1" />
+                        </Sequence>
+                      </ActivityAction>
+                    </Catch>
+                    <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_3">
+                      <ActivityAction x:TypeArguments="s:Exception">
+                        <ActivityAction.Argument>
+                          <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+                        </ActivityAction.Argument>
+                        <gjc:LogActivity ContinueOnError="{x:Null}" Timeout="{x:Null}" sap2010:WorkflowViewState.IdRef="LogActivity_1" MessageToLog="[exception.Message]" />
+                      </ActivityAction>
+                    </Catch>
+                  </TryCatch.Catches>
+                  <TryCatch.Finally>
+                    <Sequence sap2010:WorkflowViewState.IdRef="Sequence_5" />
+                  </TryCatch.Finally>
+                </TryCatch>
+                <gjdd:SqlServerActivity CommandTimeOut="{x:Null}" ConnectionString="{x:Null}" ContinueOnError="{x:Null}" Delimiter="{x:Null}" OutDataTable="{x:Null}" Timeout="{x:Null}" DatabaseName="CATDM_DataMart" DisplayName="RecordSuccess" sap2010:WorkflowViewState.IdRef="SqlServerActivity_8" Password="BBG5bqt65Inhqlo20M3d0/BD/iRKpMvs+vGjKtPY83+e" Query="[&quot; Update dbo.XML_Cross_Reference set Date_Moved =getdate(),Move_Status='Success' where PUB_JOB_ID=&quot; &amp; Pub_Job_ID &amp; &quot; and  TABLENAME = &quot; &amp;&quot;'&quot;&amp; S_TABLE_NAME &amp;&quot;'&quot;&amp; &quot; and S_key_column_value =&quot; &amp; S_key_column_value &amp; &quot;  and Move_Status is NULL&quot;]" Server="GZSB-SQLSA007" Username="TDM_USER" />
+              </Sequence>
+            </Sequence>
+          </ActivityAction>
+        </ForEach>
+      </FlowStep>
+    </FlowStep.Next>
+  </FlowStep>
+  <x:Reference>__ReferenceID0</x:Reference>
+  <sap2010:WorkflowViewState.ViewStateManager>
+    <sap2010:ViewStateManager>
+      <sap2010:ViewStateData Id="SqlServerActivity_1" sap:VirtualizedContainerService.HintSize="230,259">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Assign_11" sap:VirtualizedContainerService.HintSize="414,60" />
+      <sap2010:ViewStateData Id="Assign_12" sap:VirtualizedContainerService.HintSize="414,60" />
+      <sap2010:ViewStateData Id="Assign_1" sap:VirtualizedContainerService.HintSize="414,60" />
+      <sap2010:ViewStateData Id="Assign_3" sap:VirtualizedContainerService.HintSize="414,60" />
+      <sap2010:ViewStateData Id="Assign_13" sap:VirtualizedContainerService.HintSize="414,60" />
+      <sap2010:ViewStateData Id="Assign_14" sap:VirtualizedContainerService.HintSize="414,60" />
+      <sap2010:ViewStateData Id="Assign_2" sap:VirtualizedContainerService.HintSize="414,60" />
+      <sap2010:ViewStateData Id="Assign_4" sap:VirtualizedContainerService.HintSize="414,60" />
+      <sap2010:ViewStateData Id="Assign_15" sap:VirtualizedContainerService.HintSize="414,60" />
+      <sap2010:ViewStateData Id="Assign_16" sap:VirtualizedContainerService.HintSize="414,60" />
+      <sap2010:ViewStateData Id="Assign_17" sap:VirtualizedContainerService.HintSize="414,60" />
+      <sap2010:ViewStateData Id="Assign_5" sap:VirtualizedContainerService.HintSize="414,60" />
+      <sap2010:ViewStateData Id="Assign_6" sap:VirtualizedContainerService.HintSize="414,60" />
+      <sap2010:ViewStateData Id="Assign_7" sap:VirtualizedContainerService.HintSize="414,60" />
+      <sap2010:ViewStateData Id="Assign_8" sap:VirtualizedContainerService.HintSize="414,60" />
+      <sap2010:ViewStateData Id="Assign_9" sap:VirtualizedContainerService.HintSize="414,60" />
+      <sap2010:ViewStateData Id="Assign_10" sap:VirtualizedContainerService.HintSize="414,60" />
+      <sap2010:ViewStateData Id="SqlServerActivity_2" sap:VirtualizedContainerService.HintSize="414,259" />
+      <sap2010:ViewStateData Id="Assign_20" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="Sequence_2" sap:VirtualizedContainerService.HintSize="264,184">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="ForEach`1_3" sap:VirtualizedContainerService.HintSize="414,332" />
+      <sap2010:ViewStateData Id="Assign_27" sap:VirtualizedContainerService.HintSize="414,60" />
+      <sap2010:ViewStateData Id="SqlServerActivity_4" sap:VirtualizedContainerService.HintSize="230,259" />
+      <sap2010:ViewStateData Id="Assign_28" sap:VirtualizedContainerService.HintSize="242,60" />
+      <sap2010:ViewStateData Id="FileActivity_1" sap:VirtualizedContainerService.HintSize="242,82" />
+      <sap2010:ViewStateData Id="SqlServerActivity_7" sap:VirtualizedContainerService.HintSize="242,259" />
+      <sap2010:ViewStateData Id="TerminateWorkflow_1" sap:VirtualizedContainerService.HintSize="242,22" />
+      <sap2010:ViewStateData Id="Sequence_6" sap:VirtualizedContainerService.HintSize="264,646">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Catch`1_2" sap:VirtualizedContainerService.HintSize="400,21">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="LogActivity_1" sap:VirtualizedContainerService.HintSize="200,22" />
+      <sap2010:ViewStateData Id="Catch`1_3" sap:VirtualizedContainerService.HintSize="400,104">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Sequence_5" sap:VirtualizedContainerService.HintSize="200,99">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="TryCatch_1" sap:VirtualizedContainerService.HintSize="414,288" />
+      <sap2010:ViewStateData Id="SqlServerActivity_8" sap:VirtualizedContainerService.HintSize="414,259" />
+      <sap2010:ViewStateData Id="Sequence_1" sap:VirtualizedContainerService.HintSize="436,3792">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Sequence_3" sap:VirtualizedContainerService.HintSize="458,3916">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="ForEach`1_1" sap:VirtualizedContainerService.HintSize="488,4064">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_2">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">200,594.5</av:Point>
+            <av:Size x:Key="ShapeSize">200,51</av:Size>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_1">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">185,120.5</av:Point>
+            <av:Size x:Key="ShapeSize">230,259</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">300,379.5 300,594.5</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Flowchart_1" sap:VirtualizedContainerService.HintSize="614,682">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
+            <av:Point x:Key="ShapeLocation">270,2.5</av:Point>
+            <av:Size x:Key="ShapeSize">60,75</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">300,77.5 300,120.5</av:PointCollection>
+            <x:Double x:Key="Height">645.5</x:Double>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+    </sap2010:ViewStateManager>
+  </sap2010:WorkflowViewState.ViewStateManager>
+  <sads:DebugSymbol.Symbol>dzNDOlxVc2Vyc1xzaGFzaGFua1xEZXNrdG9wXE11bHRpRXhjZXB0aW9uU3VwcG9ydC52d2ZwAQG6Aw0BATEJMTgBBDcyNzgBAzkyOVkBAksFS+8FAqkBUQm2AhMBBUuhAkuxAgKwAUviBUvsBQKvAUvwAkvBBQKtAUvJBUvYBQKsAUu7AkvpAgKrAUujAUuzAQKqAVFkUX0CpwFWDbQCGAEGVw+zAhoBB2oRcRoCogFyEXkaAp0BehGBARoCmAGCARGJARoCkwGKARGRARoCjgGSARGZARoCiQGaARGhARoChAGiARGpARoBf6oBEbEBGgF6sgERuQEaAXW6ARHBARoBcMIBEckBGgFrygER0QEaAWbSARHZARoBYdoBEeEBGgFc4gER6QEaAVfqARHxARoBUvIBEfIB1wQBRvMBEYMCGwE9hAIRiwIaATSMAhGxAhwBEbICEbIC5QUBCG88b1UCpQFsPWxJAqMBdzx3VQKgAXQ9dEsCngF/PH9VApsBfD18SwKZAYcBPIcBVQKWAYQBPYQBTgKUAY8BPI8BVQKRAYwBPYwBTQKPAZcBPJcBVQKMAZQBPZQBTQKKAZ8BPJ8BVQKHAZwBPZwBUQKFAacBPKcBVQKCAaQBPaQBUQKAAa8BPK8BVQF9rAE9rAFLAXu3ATy3AVUBeLQBPbQBSQF2vwE8vwFWAXO8AT28AVABcccBPMcBVgFuxAE9xAFNAWzPATzPAVYBacwBPcwBTAFn1wE81wFWAWTUAT3UAU4BYt8BPN8BVgFf3AE93AFKAV3nATznAVYBWuQBPeQBRgFY7wE87wFWAVXsAT3sAVABU/IBowLyAbACAVDyAcoE8gHUBAFP8gHvAvIBqQQBSvIBsQTyAcAEAUnyAboC8gHoAgFI8gGvAfIBvAEBR/MBjAHzAaABAUT4ARWBAiABPoYCPYYCSwE1jgIVjgKmAwEtrwIVrwJOASyWAhmiAiQBFaoCGaoCrQEBErIC2AWyAuIFARCyAugCsgK3BQEMsgK/BbICzgUBC7ICswKyAuECAQqyAscBsgLXAQEJ+QEXgAIgAT+OApkDjgKjAwEzjgLoAo4C+AIBMY4CgAOOAo8DATCOArMCjgLhAgEvjgLLAY4C2AEBLpcCG54CJAEnnwIbnwLVAQEioAIboAK/BQEZoQIboQJ+ARaqApUBqgKqAQET/gFC/gFcAUL7AUP7AVABQJwCRpwCYwEqmQJHmQJOASifAsgBnwLSAQElnwKIAZ8CkQEBI6ACsgWgArwFASGgAvACoAKRBQEdoAKZBaACqAUBHKACuwKgAukCARugAtEBoALhAQEaoQI4oQJFARc=</sads:DebugSymbol.Symbol>
+</Flowchart>

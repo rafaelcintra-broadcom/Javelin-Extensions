@@ -1,0 +1,14 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">
+   <soapenv:Header/>
+   <soapenv:Body>
+    <tem:GetLevels>        
+         <tem:sessionID>10000248</tem:sessionID>         
+         <tem:projectID>1043</tem:projectID>         
+         <tem:versionID>1044</tem:versionID>         
+         <tem:level>0</tem:level>         
+         <tem:parentID>1044</tem:parentID>       
+         <tem:onDemandOnly>Y</tem:onDemandOnly>      
+         <tem:levelType>N</tem:levelType>
+    </tem:GetLevels>
+   </soapenv:Body>
+</soapenv:Envelope>

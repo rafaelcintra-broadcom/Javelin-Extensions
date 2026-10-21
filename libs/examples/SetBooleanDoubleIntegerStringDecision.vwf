@@ -1,0 +1,236 @@
+﻿<Flowchart mc:Ignorable="sap sap2010 sads" sap2010:WorkflowViewState.IdRef="Flowchart_1"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:av="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:gjc="clr-namespace:GridTools.Javelin.Common;assembly=GridTools.Javelin.Common"
+ xmlns:gjd="clr-namespace:GridTools.Javelin.Designer;assembly=Javelin"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:s="clr-namespace:System;assembly=mscorlib"
+ xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+ xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=mscorlib"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <TextExpression.Namespaces>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+    </sco:Collection>
+  </TextExpression.Namespaces>
+  <TextExpression.References>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.ServiceModel</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.References>
+  <Flowchart.Variables>
+    <Variable x:TypeArguments="x:Int32" Name="Age" />
+    <Variable x:TypeArguments="x:String" Name="Name" />
+    <Variable x:TypeArguments="x:Double" Name="EmploymentYears" />
+    <Variable x:TypeArguments="x:Boolean" Name="Gender" />
+  </Flowchart.Variables>
+  <Flowchart.StartNode>
+    <x:Reference>__ReferenceID6</x:Reference>
+  </Flowchart.StartNode>
+  <FlowStep x:Name="__ReferenceID0" sap2010:WorkflowViewState.IdRef="FlowStep_1">
+    <gjd:JGuid.JGuid>
+      <s:Guid>63ecfc02-e793-4e93-a8aa-2a2de8e3bcda</s:Guid>
+    </gjd:JGuid.JGuid>
+    <gjc:SetVariableActivity x:TypeArguments="x:Boolean" ContinueOnError="{x:Null}" Timeout="{x:Null}" DisplayName="SetVariableActivity&lt;Boolean&gt; Do you identify as Female Gendered?" sap2010:WorkflowViewState.IdRef="SetVariableActivity`1_1" Variable="[Gender]" />
+    <FlowStep.Next>
+      <FlowDecision x:Name="__ReferenceID5" Condition="[Gender]" sap2010:WorkflowViewState.IdRef="FlowDecision_2">
+        <FlowDecision.True>
+          <FlowStep x:Name="__ReferenceID3" sap2010:WorkflowViewState.IdRef="FlowStep_5">
+            <gjd:JGuid.JGuid>
+              <s:Guid>a8f4b2a7-9636-43da-929e-d3c7d8ccd8e4</s:Guid>
+            </gjd:JGuid.JGuid>
+            <gjc:LogActivity ContinueOnError="{x:Null}" Timeout="{x:Null}" DisplayName="LogActivity, Print answers " sap2010:WorkflowViewState.IdRef="LogActivity_1" MessageToLog="[Environment.NewLine &amp; &quot;You are &quot; &amp; age &amp; &quot; years of age &quot; &amp; Environment.Newline &amp; &quot;Your name is &quot; &amp; Name &amp; Environment.Newline &amp; &quot;You've been employed in Tech &quot; &amp; EmploymentYears &amp; &quot; Years&quot; &amp; Environment.Newline &amp; &quot;You identify as female&quot;]" />
+          </FlowStep>
+        </FlowDecision.True>
+        <FlowDecision.False>
+          <FlowStep x:Name="__ReferenceID4" sap2010:WorkflowViewState.IdRef="FlowStep_6">
+            <gjd:JGuid.JGuid>
+              <s:Guid>a8f4b2a7-9636-43da-929e-d3c7d8ccd8e4</s:Guid>
+            </gjd:JGuid.JGuid>
+            <gjc:LogActivity ContinueOnError="{x:Null}" Timeout="{x:Null}" DisplayName="LogActivity, Print answers " sap2010:WorkflowViewState.IdRef="LogActivity_2" MessageToLog="[Environment.NewLine &amp; &quot; You are &quot; &amp; age &amp; &quot; years of age &quot; &amp; Environment.Newline &amp; &quot;Your name is &quot; &amp; Name &amp; Environment.Newline &amp; &quot;You've been employed in Tech &quot; &amp; EmploymentYears &amp; &quot; Years&quot; &amp; Environment.Newline &amp; &quot;You don't identify as female&quot;]" />
+          </FlowStep>
+        </FlowDecision.False>
+      </FlowDecision>
+    </FlowStep.Next>
+  </FlowStep>
+  <FlowStep x:Name="__ReferenceID1" sap2010:WorkflowViewState.IdRef="FlowStep_2">
+    <gjd:JGuid.JGuid>
+      <s:Guid>53eef738-e4b0-4ca0-8176-45f13bd2877e</s:Guid>
+    </gjd:JGuid.JGuid>
+    <gjc:SetVariableActivity x:TypeArguments="x:Double" ContinueOnError="{x:Null}" Timeout="{x:Null}" DisplayName="SetVariableActivity&lt;Double&gt; How Many years have you worked in Tech? " sap2010:WorkflowViewState.IdRef="SetVariableActivity`1_2" Variable="[EmploymentYears]" />
+    <FlowStep.Next>
+      <x:Reference>__ReferenceID0</x:Reference>
+    </FlowStep.Next>
+  </FlowStep>
+  <FlowStep x:Name="__ReferenceID6" sap2010:WorkflowViewState.IdRef="FlowStep_3">
+    <gjd:JGuid.JGuid>
+      <s:Guid>ce8a092d-4a51-4153-a610-28ec1c7764ba</s:Guid>
+    </gjd:JGuid.JGuid>
+    <gjc:SetVariableActivity x:TypeArguments="x:Int32" ContinueOnError="{x:Null}" Timeout="{x:Null}" DisplayName="SetVariableActivity&lt;Int32&gt; In whole years how old are you?" sap2010:WorkflowViewState.IdRef="SetVariableActivity`1_3" Variable="[Age]" />
+    <FlowStep.Next>
+      <FlowStep x:Name="__ReferenceID2" sap2010:WorkflowViewState.IdRef="FlowStep_4">
+        <gjd:JGuid.JGuid>
+          <s:Guid>15432ccb-ef30-4a67-8382-ade7e07aa1d1</s:Guid>
+        </gjd:JGuid.JGuid>
+        <gjc:SetVariableActivity x:TypeArguments="x:String" ContinueOnError="{x:Null}" Timeout="{x:Null}" DisplayName="SetVariableActivity&lt;String&gt; WHATS YOUR NAME" sap2010:WorkflowViewState.IdRef="SetVariableActivity`1_4" Variable="[Name]" />
+        <FlowStep.Next>
+          <x:Reference>__ReferenceID1</x:Reference>
+        </FlowStep.Next>
+      </FlowStep>
+    </FlowStep.Next>
+  </FlowStep>
+  <x:Reference>__ReferenceID2</x:Reference>
+  <FlowStep sap2010:WorkflowViewState.IdRef="FlowStep_7">
+    <gjd:JGuid.JGuid>
+      <s:Guid>a4410b38-28e6-4500-bebd-a80626255b07</s:Guid>
+    </gjd:JGuid.JGuid>
+    <gjc:LogActivity ContinueOnError="{x:Null}" MessageToLog="{x:Null}" Timeout="{x:Null}" DisplayName="Press Start!" sap2010:WorkflowViewState.IdRef="LogActivity_3" />
+  </FlowStep>
+  <x:Reference>__ReferenceID3</x:Reference>
+  <x:Reference>__ReferenceID4</x:Reference>
+  <x:Reference>__ReferenceID5</x:Reference>
+  <sap2010:WorkflowViewState.ViewStateManager>
+    <sap2010:ViewStateManager>
+      <sap2010:ViewStateData Id="SetVariableActivity`1_1" sap:VirtualizedContainerService.HintSize="200,22">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="LogActivity_1" sap:VirtualizedContainerService.HintSize="200,22">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_5">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">60,539</av:Point>
+            <av:Size x:Key="ShapeSize">200,22</av:Size>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="LogActivity_2" sap:VirtualizedContainerService.HintSize="200,22">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_6">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">390,499</av:Point>
+            <av:Size x:Key="ShapeSize">200,22</av:Size>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowDecision_2" sap:VirtualizedContainerService.HintSize="70,87">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            <av:Point x:Key="ShapeLocation">275,376.5</av:Point>
+            <av:Size x:Key="ShapeSize">70,87</av:Size>
+            <av:PointCollection x:Key="TrueConnector">275,420 160,420 160,539</av:PointCollection>
+            <av:PointCollection x:Key="FalseConnector">345,420 490,420 490,499</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_1">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">200,329</av:Point>
+            <av:Size x:Key="ShapeSize">200,22</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">300,351 300,376.5 310,376.5</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="SetVariableActivity`1_2" sap:VirtualizedContainerService.HintSize="200,22">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_2">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">200,269</av:Point>
+            <av:Size x:Key="ShapeSize">200,22</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">300,291 300,329</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="SetVariableActivity`1_3" sap:VirtualizedContainerService.HintSize="200,22">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="SetVariableActivity`1_4" sap:VirtualizedContainerService.HintSize="200,22">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_4">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">200,199</av:Point>
+            <av:Size x:Key="ShapeSize">200,22</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">300,221 300,269</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_3">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">190,109</av:Point>
+            <av:Size x:Key="ShapeSize">200,22</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">290,131 290,161 300,161 300,199</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="LogActivity_3" sap:VirtualizedContainerService.HintSize="200,22">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_7">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">10,19</av:Point>
+            <av:Size x:Key="ShapeSize">200,22</av:Size>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Flowchart_1" sap:VirtualizedContainerService.HintSize="824,636">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
+            <av:Point x:Key="ShapeLocation">270,2.5</av:Point>
+            <av:Size x:Key="ShapeSize">60,75</av:Size>
+            <x:Double x:Key="Width">810</x:Double>
+            <av:PointCollection x:Key="ConnectorLocation">300,77.5 300,107.5 290,107.5 290,109</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+    </sap2010:ViewStateManager>
+  </sap2010:WorkflowViewState.ViewStateManager>
+  <sads:DebugSymbol.Symbol>d1pDOlxVc2Vyc1xkb3ZtYTAyXERvY3VtZW50c1xKYXZlbGluXEphdmVsaW5fRmxvd3NcU2V0Qm9vbGVhbkRvdWJsZUludGVnZXJTdHJpbmdEZWNpc2lvbi52d2YOAQHsAQ0BAU0FTYICARdTCVP5AQEURAVEmQIBESoFKo0CAQ4sNyxBAQw6DTqbBAEHMg0ylAQBAk34AU3/AQEYU+4BU/YBARVEgwJElgIBEiqAAiqKAgEPOrMBOpgEAQgyswEykQQBAw==</sads:DebugSymbol.Symbol>
+</Flowchart>

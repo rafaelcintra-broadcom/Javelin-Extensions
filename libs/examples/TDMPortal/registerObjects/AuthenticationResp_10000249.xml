@@ -1,0 +1,13 @@
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Header>
+    <Action s:mustUnderstand="1" xmlns="http://schemas.microsoft.com/ws/2005/05/addressing/none">http://tempuri.org/GT_I/AuthenticateUserResponse</Action>
+  </s:Header>
+  <s:Body>
+    <AuthenticateUserResponse xmlns="http://tempuri.org/">
+      <AuthenticateUserResult xmlns:d4p1="http://schemas.datacontract.org/2004/07/GTWCF" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+        <d4p1:sessionGUID>aba6e6d6-0f65-43ae-99a7-e6a58280e94b</d4p1:sessionGUID>
+        <d4p1:sessionID>10000249</d4p1:sessionID>
+      </AuthenticateUserResult>
+    </AuthenticateUserResponse>
+  </s:Body>
+</s:Envelope>

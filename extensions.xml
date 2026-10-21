@@ -1,0 +1,22 @@
+<Extensions>
+  <Category Name="MongoDB Activities">
+    <Extension Assembly="GridTools.Javelin.MongoDbActivities.dll"
+               Type="GridTools.Javelin.MongoDbActivities.MongoFindActivity"
+               Name="MongoDB Find" />
+    <Extension Assembly="GridTools.Javelin.MongoDbActivities.dll"
+               Type="GridTools.Javelin.MongoDbActivities.MongoInsertActivity"
+               Name="MongoDB Insert" />
+    <Extension Assembly="GridTools.Javelin.MongoDbActivities.dll"
+               Type="GridTools.Javelin.MongoDbActivities.MongoUpdateActivity"
+               Name="MongoDB Update" />
+    <Extension Assembly="GridTools.Javelin.MongoDbActivities.dll"
+               Type="GridTools.Javelin.MongoDbActivities.MongoDeleteActivity"
+               Name="MongoDB Delete" />
+    <Extension Assembly="GridTools.Javelin.MongoDbActivities.dll"
+               Type="GridTools.Javelin.MongoDbActivities.MongoAggregateActivity"
+               Name="MongoDB Aggregate" />
+    <Extension Assembly="GridTools.Javelin.MongoDbActivities.dll"
+               Type="GridTools.Javelin.MongoDbActivities.MongoExecuteCommandActivity"
+               Name="MongoDB Execute Command" />
+  </Category>
+</Extensions>

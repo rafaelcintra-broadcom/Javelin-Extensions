@@ -1,0 +1,93 @@
+﻿<Flowchart mc:Ignorable="sap sap2010 sads" sap2010:WorkflowViewState.IdRef="Flowchart_1"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:av="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:gjd="clr-namespace:GridTools.Javelin.Designer;assembly=Javelin"
+ xmlns:gjdd="clr-namespace:GridTools.Javelin.Designer.DbActivities;assembly=GridTools.Javelin.Designer.DbActivities"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:s="clr-namespace:System;assembly=mscorlib"
+ xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+ xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=mscorlib"
+ xmlns:sd="clr-namespace:System.Data;assembly=System.Data"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <TextExpression.Namespaces>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System.Data</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Xml.Serialization</x:String>
+    </sco:Collection>
+  </TextExpression.Namespaces>
+  <TextExpression.References>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Xml</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.References>
+  <Flowchart.Variables>
+    <Variable x:TypeArguments="sd:IDataReader" Name="outDataReader" />
+    <Variable x:TypeArguments="x:String" Default="DOVMA02\SQLEXPRESS" Name="SQLServerName" />
+    <Variable x:TypeArguments="x:String" Default="address" Name="SQLTableName" />
+    <Variable x:TypeArguments="x:String" Default="CREDITCARD" Name="DbName" />
+    <Variable x:TypeArguments="sd:DataTable" Name="outDataTable" />
+  </Flowchart.Variables>
+  <Flowchart.StartNode>
+    <x:Reference>__ReferenceID0</x:Reference>
+  </Flowchart.StartNode>
+  <FlowStep x:Name="__ReferenceID0" sap2010:WorkflowViewState.IdRef="FlowStep_1">
+    <gjd:JGuid.JGuid>
+      <s:Guid>0b41fffc-634a-49f5-8e8e-fbcc364433e6</s:Guid>
+    </gjd:JGuid.JGuid>
+    <gjdd:DataReaderActivity AdditionalConnectionParameters="{x:Null}" CommandTimeout="{x:Null}" ContinueOnError="{x:Null}" Database="{x:Null}" OdbcConnectionString="{x:Null}" OleDbConnectionString="{x:Null}" Timeout="{x:Null}" sap2010:WorkflowViewState.IdRef="DataReaderActivity_1" IntegratedSecurity="False" OutDataReader="[outDataReader]" Password="XC9yERCQw4yNvZdQjamkcj+4CX1XMP90bB5w2qVCkC+xJ0NbM5G/" Provider="oracle" Query="SELECT * FROM ADDRESS" Schema="CREDITCARD" Server="localhost" ServiceName="orcl.ca.com" Username="CREDITCARD">
+      <gjdd:DataReaderActivity.Children>
+        <gjdd:SqlBulkCopyActivity AdditionalConnectionParameters="{x:Null}" BatchSize="{x:Null}" BulkCopyTimeout="{x:Null}" ContinueOnError="{x:Null}" KeepIdentity="{x:Null}" NotifyAfter="{x:Null}" OutRowsCopied="{x:Null}" Timeout="{x:Null}" Database="[dbName]" DestinationTableName="[SQLTableName]" sap2010:WorkflowViewState.IdRef="SqlBulkCopyActivity_1" InDataReader="[outDataReader]" IntegratedSecurity="False" Password="7/BOiSvgC4xEbxJUJ1IDwRZA85Rj" Schema="dbo" Server="[SQLServerName]" Username="sa">
+          <gjdd:SqlBulkCopyActivity.ColumnMappings>
+            <InArgument x:TypeArguments="x:String">
+              <Literal x:TypeArguments="x:String" Value="" />
+            </InArgument>
+          </gjdd:SqlBulkCopyActivity.ColumnMappings>
+        </gjdd:SqlBulkCopyActivity>
+      </gjdd:DataReaderActivity.Children>
+    </gjdd:DataReaderActivity>
+  </FlowStep>
+  <sap2010:WorkflowViewState.ViewStateManager>
+    <sap2010:ViewStateManager>
+      <sap2010:ViewStateData Id="SqlBulkCopyActivity_1" sap:VirtualizedContainerService.HintSize="207,55">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="DataReaderActivity_1" sap:VirtualizedContainerService.HintSize="221,341">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_1">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">165.5,194.5</av:Point>
+            <av:Size x:Key="ShapeSize">289,51</av:Size>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Flowchart_1" sap:VirtualizedContainerService.HintSize="614,666">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
+            <av:Point x:Key="ShapeLocation">270,2.5</av:Point>
+            <av:Size x:Key="ShapeSize">60,75</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">300,77.5 300,107.5 310,107.5 310,194.5</av:PointCollection>
+            <x:Double x:Key="Height">629.5</x:Double>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+    </sap2010:ViewStateManager>
+  </sap2010:WorkflowViewState.ViewStateManager>
+  <sads:DebugSymbol.Symbol>d0NDOlxVc2Vyc1xkb3ZtYTAyXERvY3VtZW50c1xKYXZlbGluXEphdmVsaW5fRmxvd3NcT3JhY2xlVG9TUUxCQ1AudndmFgEBXQ0BAR8yH0YBBCAyIDsBAyEyIT4BAisFNR8BBSugAyuoAwEOK84DK9oDAQ0rxQIr1gIBCyv6AyuHBAEKK5EEK50EAQkrrwMrxgMBCCviAyvtAwEHK+ACK5YDAQYtCTMkAQ8tzgMt0wMBGy2cAi2sAgEZMA8wPgEYLfYDLfoDARct2wMt7AMBFS2oAy3GAwEULfwBLYYCARIt8gItgwMBEA==</sads:DebugSymbol.Symbol>
+</Flowchart>

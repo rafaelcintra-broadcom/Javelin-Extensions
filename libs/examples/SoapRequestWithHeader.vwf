@@ -1,0 +1,67 @@
+﻿<Flowchart mc:Ignorable="sap sap2010 sads" sap2010:WorkflowViewState.IdRef="Flowchart_1"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:av="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:gjc="clr-namespace:GridTools.Javelin.Common;assembly=GridTools.Javelin.Common"
+ xmlns:gjd="clr-namespace:GridTools.Javelin.Designer;assembly=Javelin"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:s="clr-namespace:System;assembly=mscorlib"
+ xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+ xmlns:sx="clr-namespace:System.Xml;assembly=System.Xml"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Flowchart.Variables>
+    <Variable x:TypeArguments="x:String" Default="http://desktop-6japbl4:8090/GTService" Name="url" />
+    <Variable x:TypeArguments="sx:XmlDocument" Name="resAuthenticateUser" />
+    <Variable x:TypeArguments="x:String" Default="administrator" Name="var_userName" />
+    <Variable x:TypeArguments="x:String" Default="marmite" Name="var_password" />
+    <Variable x:TypeArguments="x:String" Name="var_osUser" />
+    <Variable x:TypeArguments="x:String" Name="var_macAddress" />
+    <Variable x:TypeArguments="x:String" Name="var_application" />
+  </Flowchart.Variables>
+  <Flowchart.StartNode>
+    <x:Reference>__ReferenceID0</x:Reference>
+  </Flowchart.StartNode>
+  <FlowStep x:Name="__ReferenceID0" sap2010:WorkflowViewState.IdRef="FlowStep_1">
+    <gjd:JGuid.JGuid>
+      <s:Guid>651a01f9-285e-4fc1-a074-c25dea76aaaa</s:Guid>
+    </gjd:JGuid.JGuid>
+    <gjc:SoapRequestActivity ContentType="{x:Null}" ContinueOnError="{x:Null}" ResponseXmlWithNamespace="{x:Null}" Timeout="{x:Null}" UserAgent="{x:Null}" ActionName="http://tempuri.org/GT_I/AuthenticateUser" DisplayName="AuthenticateUser" sap2010:WorkflowViewState.IdRef="SoapRequestActivity_1" LogRequest="False" LogResponse="False" RequestXml="[&quot;&lt;soap:Envelope xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xsd='http://www.w3.org/2001/XMLSchema' xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'&gt;&lt;soap:Body&gt;&lt;AuthenticateUser xmlns='http://tempuri.org/'&gt;&lt;userName&gt;&quot; &amp; var_userName &amp; &quot;&lt;/userName&gt;&lt;password&gt;&quot; &amp; var_password &amp; &quot;&lt;/password&gt;&lt;osUser&gt;&quot; &amp; var_osUser &amp; &quot;&lt;/osUser&gt;&lt;macAddress&gt;&quot; &amp; var_macAddress &amp; &quot;&lt;/macAddress&gt;&lt;application&gt;&quot; &amp; var_application &amp; &quot;&lt;/application&gt;&lt;/AuthenticateUser&gt;&lt;/soap:Body&gt;&lt;/soap:Envelope&gt;&quot;]" ResponseXml="[resAuthenticateUser]" URL="[url]">
+      <gjc:SoapRequestActivity.Headers>
+        <InArgument x:TypeArguments="x:String" x:Key="name">shashank</InArgument>
+        <InArgument x:TypeArguments="x:String" x:Key="value">mishra</InArgument>
+      </gjc:SoapRequestActivity.Headers>
+    </gjc:SoapRequestActivity>
+  </FlowStep>
+  <sap2010:WorkflowViewState.ViewStateManager>
+    <sap2010:ViewStateManager>
+      <sap2010:ViewStateData Id="SoapRequestActivity_1" sap:VirtualizedContainerService.HintSize="903,321">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_1">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">200,192</av:Point>
+            <av:Size x:Key="ShapeSize">200,36</av:Size>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Flowchart_1" sap:VirtualizedContainerService.HintSize="614,636">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
+            <av:Point x:Key="ShapeLocation">270,2.5</av:Point>
+            <av:Size x:Key="ShapeSize">60,75</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">300,77.5 300,192</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+    </sap2010:ViewStateManager>
+  </sap2010:WorkflowViewState.ViewStateManager>
+  <sads:DebugSymbol.Symbol>d0FDOlxVc2Vyc1xzaGFzaGFua1xEZXNrdG9wXEphdmVsaW5fRmxvd3NcU29hcFJlcXVlc3RXaXRoSGVhZGVyLnZ3Zg0BAUMNAQEPMg9ZAQQRMhFBAQMSMhI7AQIeBSMfAQUhPiFEARQetQgevAgBEh6nAR7RAQERHsgCHs8CARAe2wIejAgBCh6ZCB6wCAEIHrQCHrsCAQcgPSBFAQY=</sads:DebugSymbol.Symbol>
+</Flowchart>

@@ -1,0 +1,81 @@
+﻿<Flowchart mc:Ignorable="sap sap2010 sads" sap2010:WorkflowViewState.IdRef="Flowchart_1"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:av="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:gjd="clr-namespace:GridTools.Javelin.Designer;assembly=Javelin"
+ xmlns:gjdd="clr-namespace:GridTools.Javelin.Designer.DbActivities;assembly=GridTools.Javelin.Designer.DbActivities"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:s="clr-namespace:System;assembly=mscorlib"
+ xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+ xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=mscorlib"
+ xmlns:sd="clr-namespace:System.Data;assembly=System.Data"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <TextExpression.Namespaces>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System.Data</x:String>
+      <x:String>System.Activities</x:String>
+    </sco:Collection>
+  </TextExpression.Namespaces>
+  <TextExpression.References>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.DataSetExtensions</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.References>
+  <Flowchart.Variables>
+    <Variable x:TypeArguments="sd:IDataReader" Name="dr" />
+  </Flowchart.Variables>
+  <Flowchart.StartNode>
+    <x:Reference>__ReferenceID0</x:Reference>
+  </Flowchart.StartNode>
+  <FlowStep x:Name="__ReferenceID0" sap2010:WorkflowViewState.IdRef="FlowStep_1">
+    <gjd:JGuid.JGuid>
+      <s:Guid>5e0145d1-3a01-44b8-9b97-36e807320d5f</s:Guid>
+    </gjd:JGuid.JGuid>
+    <gjdd:DB2DataReaderActivity ConnectionString="{x:Null}" ContinueOnError="{x:Null}" Timeout="{x:Null}" CommandTimeOut="600" DatabaseName="SAMPLE" sap2010:WorkflowViewState.IdRef="DB2DataReaderActivity_1" OutDataReader="[dr]" Password="88BopkHuZ2cdRHzNM1cfwdWOcaxhxCuufb1uiPsa86bF" Query="SELECT * FROM EMPMDC WHERE EMPNO IN (1,2,3,4)" Server="192.168.233.129:50001" Username="db2inst1">
+      <gjdd:DB2DataReaderActivity.Children>
+        <gjdd:Db2BulkCopy ContinueOnError="{x:Null}" Timeout="{x:Null}" BulkCopyTimeout="600" Database="SAMPLET" DestinationTableName="EMPMDC" sap2010:WorkflowViewState.IdRef="Db2BulkCopy_1" InDataReader="[dr]" IntegratedSecurity="False" Password="Lkuxmx+L6C1Th0Zog4vDfyNgMAWR8KrccGj3ukCB8503" Schema="db2inst1" Server="192.168.233.129:50001" Username="db2inst1">
+          <gjdd:Db2BulkCopy.ColumnMappings>
+            <InArgument x:TypeArguments="x:String">
+              <Literal x:TypeArguments="x:String" Value="" />
+            </InArgument>
+          </gjdd:Db2BulkCopy.ColumnMappings>
+        </gjdd:Db2BulkCopy>
+      </gjdd:DB2DataReaderActivity.Children>
+    </gjdd:DB2DataReaderActivity>
+  </FlowStep>
+  <sap2010:WorkflowViewState.ViewStateManager>
+    <sap2010:ViewStateManager>
+      <sap2010:ViewStateData Id="Db2BulkCopy_1" sap:VirtualizedContainerService.HintSize="200,55" />
+      <sap2010:ViewStateData Id="DB2DataReaderActivity_1" sap:VirtualizedContainerService.HintSize="289,51">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="FlowStep_1">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <av:Point x:Key="ShapeLocation">135.721666666667,184.02</av:Point>
+            <av:Size x:Key="ShapeSize">289,51</av:Size>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Flowchart_1" sap:VirtualizedContainerService.HintSize="614,636">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
+            <av:Point x:Key="ShapeLocation">270,2.5</av:Point>
+            <av:Size x:Key="ShapeSize">60,75</av:Size>
+            <av:PointCollection x:Key="ConnectorLocation">300,77.5 300,107.5 280.221666666667,107.5 280.221666666667,184.02</av:PointCollection>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+    </sap2010:ViewStateManager>
+  </sap2010:WorkflowViewState.ViewStateManager>
+  <sads:DebugSymbol.Symbol>dzZDOlxVc2Vyc1xzaGFzaGFua1xEZXNrdG9wXEphdmVsaW5fRmxvd3NcREIyT25MaW51eC52d2YTAQFRDQEBJgUwIgECJt4BJuQBAQkmeiZ/AQgm+wImhQMBByajAibSAgEGJtoCJvECAQUm7gEmnAIBBCaNASaVAQEDKAkuHAELKFkoXgEVKK4CKLgCARQohwEojwEBEysPKz4BEijhAijrAgERKMACKNcCARAo+AEopgIBDyhoKHEBDijNASjTAQEM</sads:DebugSymbol.Symbol>
+</Flowchart>

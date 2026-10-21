@@ -1,0 +1,20 @@
+<GTSendMail>
+	<ProtocolConfig>
+		<ProtocolName>msexchange2013</ProtocolName>
+		<Port></Port>
+		<Hostname></Hostname>
+		<ExchangeServiceURL auto_discover="false"><![CDATA[https://outlook.office365.com/EWS/Exchange.asmx]]></ExchangeServiceURL>
+		<Username>notification@ca.com</Username>
+		<Password>adsasdkasd234</Password>
+		<SSL>false</SSL>
+		<FromName>Build Notification</FromName>
+		<FromAddress>notification@ca.com</FromAddress>
+		<ReplyToAddress>Joanne.smith@ca.com</ReplyToAddress>
+	</ProtocolConfig>
+	<ToAddresses>john.smith@contractor.ca.com</ToAddresses>
+	<CcAddresses></CcAddresses>
+	<BccAddresses></BccAddresses>
+	<Subject>Build Notification</Subject>
+	<BodyFilePath>D:\temp\GTSendMail.html</BodyFilePath>
+	<AttachementFilePaths></AttachementFilePaths>
+</GTSendMail>

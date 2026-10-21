@@ -1,0 +1,15 @@
+<Extensions>
+  <Extension>
+    <FQCN>JavelinExtension.FilesInFolder</FQCN>
+    <LibPath>..\JavelinExtension.dll</LibPath>
+    <DisplayText>Get Files in Folder</DisplayText>
+    <Group>Extension</Group>
+  </Extension>
+  <Extension>
+    <FQCN>JavelinExtension.JavascriptAlert</FQCN>
+    <LibPath>..\JavascriptAlert.dll</LibPath>
+    <DisplayText>Javascript Alert</DisplayText>
+    <Group>Extension</Group>
+  </Extension>
+</Extensions>
+

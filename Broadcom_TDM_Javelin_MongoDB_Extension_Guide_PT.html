@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broadcom TDM Javelin - Extensão MongoDB NoSQL & Pipeline Seguro Cofre/Target</title>
+    <style>
+        :root {
+            --bcom-red: #CC092F;
+            --bcom-red-dark: #A60624;
+            --bcom-charcoal: #111827;
+            --bcom-slate: #4B5563;
+            --bcom-slate-light: #9CA3AF;
+            --bcom-bg-neutral: #F8FAFC;
+            --bcom-border: #E5E7EB;
+            --bcom-code-bg: #1E293B;
+            --bcom-green: #059669;
+            --bcom-blue: #2563EB;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #F3F4F6;
+            color: var(--bcom-charcoal);
+            line-height: 1.5;
+            font-size: 13.5px;
+            padding: 24px;
+        }
+
+        .content-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid var(--bcom-border);
+            border-top: 5px solid var(--bcom-red);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 36px 44px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--bcom-border);
+            padding-bottom: 18px;
+            margin-bottom: 24px;
+        }
+
+        .doc-title { font-size: 22px; font-weight: 700; color: var(--bcom-charcoal); letter-spacing: -0.3px; }
+        .doc-subtitle { font-size: 13px; color: var(--bcom-slate); font-weight: 400; margin-top: 3px; }
+
+        .badge-tag {
+            background: #FEE2E2;
+            color: var(--bcom-red-dark);
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            background-color: var(--bcom-bg-neutral);
+            border: 1px solid var(--bcom-border);
+            border-left: 4px solid var(--bcom-red);
+            border-radius: 4px;
+            padding: 12px 18px;
+            margin-bottom: 28px;
+        }
+
+        .meta-item { display: flex; flex-direction: column; }
+        .meta-label { font-size: 10.5px; text-transform: uppercase; color: var(--bcom-slate); font-weight: 600; }
+        .meta-value { font-size: 13px; font-weight: 600; color: var(--bcom-charcoal); margin-top: 2px; }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 28px 0 14px 0;
+            padding-bottom: 6px;
+            border-bottom: 1.5px solid var(--bcom-border);
+        }
+
+        .section-num {
+            background: var(--bcom-red);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .section-title { font-size: 16px; font-weight: 700; color: var(--bcom-charcoal); }
+
+        .callout {
+            background-color: #EFF6FF;
+            border-left: 4px solid var(--bcom-blue);
+            border-radius: 4px;
+            padding: 12px 16px;
+            margin: 14px 0;
+            font-size: 12.5px;
+            color: #1E3A8A;
+        }
+
+        .callout.warning { background-color: #FFFBEB; border-left-color: #D97706; color: #92400E; }
+        .callout.success { background-color: #ECFDF5; border-left-color: var(--bcom-green); color: #065F46; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 14px 0; }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid var(--bcom-border);
+            border-radius: 6px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .card-header {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--bcom-charcoal);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .card-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            background: #E5E7EB;
+            color: var(--bcom-charcoal);
+        }
+
+        .table-container {
+            margin: 14px 0;
+            border: 1px solid var(--bcom-border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left; }
+        thead { background-color: #F8FAFC; border-bottom: 1.5px solid var(--bcom-border); }
+        th { padding: 9px 12px; font-weight: 700; color: var(--bcom-charcoal); font-size: 11.5px; text-transform: uppercase; }
+        td { padding: 9px 12px; border-bottom: 1px solid var(--bcom-border); color: var(--bcom-slate); vertical-align: top; }
+        tr:last-child td { border-bottom: none; }
+        tr:nth-child(even) { background-color: #FAFAFA; }
+
+        .param-name { font-family: Consolas, monospace; color: var(--bcom-red-dark); font-weight: 600; font-size: 12px; }
+        .param-type { font-size: 11px; color: #6B7280; font-style: italic; }
+
+        pre {
+            background-color: var(--bcom-code-bg);
+            color: #E2E8F0;
+            padding: 12px 14px;
+            border-radius: 5px;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 8px 0 12px 0;
+            line-height: 1.45;
+        }
+
+        code { font-family: Consolas, monospace; background-color: #F1F5F9; color: #B91C1C; padding: 2px 5px; border-radius: 3px; font-size: 11.5px; }
+        pre code { background-color: transparent; color: inherit; padding: 0; }
+
+        .footer {
+            margin-top: 36px;
+            padding-top: 14px;
+            border-top: 1px solid var(--bcom-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--bcom-slate-light);
+        }
+    </style>
+</head>
+<body>
+
+<div class="content-wrapper">
+
+    <!-- Header & Logo -->
+    <div class="header">
+        <div>
+            <div class="doc-title">CA Test Data Manager (TDM) — Javelin</div>
+            <div class="doc-subtitle">Extensão MongoDB NoSQL: Fluxo Seguro Prod ➔ Cofre ➔ Não-Prod (TDM Studio Pattern)</div>
+        </div>
+        <div style="text-align: right;">
+            <div class="badge-tag">NoSQL Data Assistant</div>
+            <div style="font-size: 11px; color: var(--bcom-slate); margin-top: 6px;">Target: .NET 4.6.1 / Javelin x64</div>
+        </div>
+    </div>
+
+    <!-- Metadata Banner -->
+    <div class="meta-banner">
+        <div class="meta-item">
+            <span class="meta-label">Assembly</span>
+            <span class="meta-value">GridTools.Javelin.MongoDbActivities.dll</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Driver Version</span>
+            <span class="meta-value">MongoDB .NET Driver 2.19.0</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Padrão Arquitetural</span>
+            <span class="meta-value">TDM Studio / 4 Barreiras de Cofre</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Conformidade</span>
+            <span class="meta-value">LGPD / GDPR / PCI-DSS / ISO 27001</span>
+        </div>
+    </div>
+
+    <!-- Seção 1: Arquitetura e 4 Barreiras -->
+    <div class="section-header">
+        <div class="section-num">1</div>
+        <div class="section-title">Arquitetura de Extração Segura e as 4 Barreiras de Defesa</div>
+    </div>
+
+    <p>
+        A extensão implementa rigorosamente a mesma lógica do <strong>TDM Studio</strong> para extração de bancos NoSQL MongoDB de Produção, passando por um <strong>Cofre Temporário Criptografado</strong> e provisionando diretamente em ambientes de <strong>Não-Produção (HML / QA)</strong> com mascaramento forense:
+    </p>
+
+    <div class="grid-4">
+        <div class="card">
+            <div class="card-header">
+                <span>🔒 Barreira 1</span>
+                <span class="card-badge">ACL NTFS</span>
+            </div>
+            <p style="font-size: 11.5px; color: var(--bcom-slate);">Herança desativada. Permissão exclusiva <code>(OI)(CI)(F)</code> concedida unicamente ao SID da conta de serviço TDM.</p>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <span>🛡️ Barreira 2</span>
+                <span class="card-badge">Windows EFS</span>
+            </div>
+            <p style="font-size: 11.5px; color: var(--bcom-slate);">Criptografia transparente em repouso ativada via <code>cipher /e</code> (AES-256 atrelado ao processo em memória).</p>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <span>⚡ Barreira 3</span>
+                <span class="card-badge">Cache RAM</span>
+            </div>
+            <p style="font-size: 11.5px; color: var(--bcom-slate);">Flag <code>FILE_ATTRIBUTE_TEMPORARY</code> instrui o kernel a reter o arquivo na memória RAM sem escrita física no disco.</p>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <span>💥 Barreira 4</span>
+                <span class="card-badge">Zero-Fill 0x00</span>
+            </div>
+            <p style="font-size: 11.5px; color: var(--bcom-slate);">Destruição forense irreversível: sobrescrita total dos bytes com <code>0x00</code> e <code>fsync</code> de hardware antes do delete.</p>
+        </div>
+    </div>
+
+    <!-- Seção 2: Catálogo de Atividades -->
+    <div class="section-header">
+        <div class="section-num">2</div>
+        <div class="section-title">Catálogo Completo de Atividades no Javelin</div>
+    </div>
+
+    <!-- Atividade 1 -->
+    <div class="card" style="margin-bottom: 16px;">
+        <div class="card-header">
+            <span>1. MongoDB Prod to Non-Prod Pipeline (<code>MongoProdToNonProdPipelineActivity</code>)</span>
+            <span class="card-badge" style="background:#ECFDF5; color:#065F46;">Pipeline Direto (All-in-One)</span>
+        </div>
+        <p style="color: var(--bcom-slate); font-size: 12.5px; margin-bottom: 8px;">
+            Executa o ciclo completo estilo TDM Studio: extrai de Produção para o cofre seguro protegido por EFS/ACL, aplica o motor de mascaramento TDM Data Painter (CPF/CNPJ com módulo 11, nomes, emails, cartões, saldos), faz a carga no MongoDB de Não-Produção (Insert ou Upsert) e realiza a destruição forense com Zero-Fill.
+        </p>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>Propriedade</th><th>Tipo / Direção</th><th>Exemplo / Padrão</th><th>Descrição</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><span class="param-name">SourceConnectionString</span></td><td><span class="param-type">In / String</span></td><td><code>"mongodb://admin:%prod_pwd%@prod-cluster:27017"</code></td><td>URI do cluster de Produção.</td></tr>
+                    <tr><td><span class="param-name">SourceDatabaseName</span> / <span class="param-name">SourceCollectionName</span></td><td><span class="param-type">In / String</span></td><td><code>"banking_prod"</code> / <code>"clientes"</code></td><td>Database e Coleção de Origem.</td></tr>
+                    <tr><td><span class="param-name">TargetConnectionString</span></td><td><span class="param-type">In / String</span></td><td><code>"mongodb://qa_user:%qa_pwd%@hml-cluster:27017"</code></td><td>URI do cluster de Não-Produção / QA.</td></tr>
+                    <tr><td><span class="param-name">TargetDatabaseName</span> / <span class="param-name">TargetCollectionName</span></td><td><span class="param-type">In / String</span></td><td><code>"banking_qa"</code> / <code>"clientes"</code></td><td>Database e Coleção de Destino.</td></tr>
+                    <tr><td><span class="param-name">WriteMode</span></td><td><span class="param-type">In / String</span></td><td><code>"Insert"</code> ou <code>"Upsert"</code></td><td>Estratégia de gravação no cluster de destino.</td></tr>
+                    <tr><td><span class="param-name">MaskingRulesJson</span></td><td><span class="param-type">In / String</span></td><td><code>"{}"</code> (Opcional)</td><td>Regras customizadas ou vazio para usar regras oficiais LGPD.</td></tr>
+                    <tr><td><span class="param-name">TotalProcessedCount</span></td><td><span class="param-type">Out / Int64</span></td><td>Variável: <code>totalProcessed</code></td><td>Total de documentos migrados com sucesso.</td></tr>
+                    <tr><td><span class="param-name">TotalPiiFieldsMasked</span></td><td><span class="param-type">Out / Int32</span></td><td>Variável: <code>totalPiiMasked</code></td><td>Contagem total de campos PII mascarados.</td></tr>
+                    <tr><td><span class="param-name">AuditSummaryJson</span></td><td><span class="param-type">Out / String</span></td><td>Variável: <code>auditJson</code></td><td>Payload JSON completo de auditoria para o TDM Portal / GTREP.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Atividade 2 -->
+    <div class="card" style="margin-bottom: 16px;">
+        <div class="card-header">
+            <span>2. MongoDB Extract to Vault (<code>MongoExtractToVaultActivity</code>)</span>
+            <span class="card-badge" style="background:#EFF6FF; color:#1E40AF;">Extração Segura</span>
+        </div>
+        <p style="color: var(--bcom-slate); font-size: 12.5px; margin-bottom: 8px;">
+            Extrai documentos do MongoDB de Produção para um arquivo seguro (.vault) dentro do cofre isolado por ACL NTFS e EFS, gerando hash SHA-256 e ID de sessão.
+        </p>
+    </div>
+
+    <!-- Atividade 3 -->
+    <div class="card" style="margin-bottom: 16px;">
+        <div class="card-header">
+            <span>3. MongoDB Vault to Target (<code>MongoVaultToTargetActivity</code>)</span>
+            <span class="card-badge" style="background:#FFFBEB; color:#92400E;">Mascaramento & Carga</span>
+        </div>
+        <p style="color: var(--bcom-slate); font-size: 12.5px; margin-bottom: 8px;">
+            Lê os documentos cifrados do cofre, aplica as transformações TDM e insere em lote no ambiente alvo, disparando o Zero-Fill no descarte do arquivo.
+        </p>
+    </div>
+
+    <!-- Atividade 4 -->
+    <div class="card" style="margin-bottom: 16px;">
+        <div class="card-header">
+            <span>4. MongoDB Vault Shred & Destroy (<code>MongoVaultShredActivity</code>)</span>
+            <span class="card-badge" style="background:#FEF2F2; color:#991B1B;">Sanitização Forense</span>
+        </div>
+        <p style="color: var(--bcom-slate); font-size: 12.5px; margin-bottom: 8px;">
+            Sobregrava ativamente qualquer arquivo ou diretório do cofre com <code>0x00</code> antes da deleção, garantindo conformidade com PCI-DSS e LGPD.
+        </p>
+    </div>
+
+    <!-- Seção 3: Como Usar no Javelin -->
+    <div class="section-header">
+        <div class="section-num">3</div>
+        <div class="section-title">Workflow de Exemplo Javelin (.vwf)</div>
+    </div>
+
+    <p>O arquivo de workflow <code>mongoDB_Prod_to_Vault_to_NonProd.vwf</code> já está disponível na raiz da extensão com o fluxo pré-configurado.</p>
+
+    <pre><code>' Exemplo de Expressão VB.NET para log do Resumo de Auditoria no Javelin:
+"[Javelin Audit] " & Environment.NewLine & auditSummaryJson</code></pre>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div>&copy; 2026 Broadcom. Todos os direitos reservados. CA Test Data Manager &trade;</div>
+        <div>CONFIDENCIAL — PARA USO EM INTEGRAÇÕES TDM</div>
+    </div>
+
+</div>
+
+</body>
+</html>

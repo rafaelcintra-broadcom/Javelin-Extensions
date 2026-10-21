@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<GTJavelinJob>
+<FlowPath>C:\cernertest\parent.vwf</FlowPath>
+<VariableFilePath>C:\cernertest\emptyvariables.csv</VariableFilePath>
+<outdir>C:\cernertest</outdir>
+<LogFile>cernertest.log</LogFile>
+</GTJavelinJob>

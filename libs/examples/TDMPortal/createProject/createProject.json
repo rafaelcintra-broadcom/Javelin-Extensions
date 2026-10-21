@@ -1,0 +1,7 @@
+{
+   "name":"project3",
+   "description":"project desc",
+   "inheritTables":true,
+   "jobLimit":"20",
+   "jobLimitEnabled":true
+}
