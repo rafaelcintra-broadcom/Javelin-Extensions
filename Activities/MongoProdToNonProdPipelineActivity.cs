@@ -205,6 +205,10 @@ namespace GridTools.Javelin.MongoDbActivities
                     findFluent = findFluent.Limit(limit.Value);
                 }
 
+                var maskingEngine = new TdmDataPainterEngine(resolvedRules);
+                int totalMaskedFields = 0;
+
+                // 3. Executa streaming de documentos de PROD: Mascara na RAM antes de persistir no cofre
                 IEnumerable<BsonDocument> DocumentStream()
                 {
                     using (var cursor = findFluent.ToCursor())
@@ -213,7 +217,10 @@ namespace GridTools.Javelin.MongoDbActivities
                         {
                             foreach (var doc in cursor.Current)
                             {
-                                yield return doc;
+                                int count;
+                                var masked = maskingEngine.MaskDocument(doc, out count);
+                                totalMaskedFields += count;
+                                yield return masked;
                             }
                         }
                     }
@@ -225,13 +232,11 @@ namespace GridTools.Javelin.MongoDbActivities
                     vaultDir, srcColl, DocumentStream(), out extractedCount, out sha256);
 
                 GlobalSettings.MessageLogger.LogMessage(
-                    "[MongoPipeline] Extração concluída: {0} documentos gravados no cofre protegido (SHA256: {1})",
-                    extractedCount, sha256);
+                    "[MongoPipeline] Extração e mascaramento concluídos: {0} documentos gravados no cofre (Campos PII mascarados: {1}, SHA256: {2})",
+                    extractedCount, totalMaskedFields, sha256);
 
-                // 4. Aplica Motor de Mascaramento Data Assistant e Carga em NÃO-PROD
-                var maskingEngine = new TdmDataPainterEngine(resolvedRules);
+                // 4. Carga em NÃO-PROD (os documentos no cofre já estão 100% mascarados e seguros)
                 long loadedCount = 0;
-                int totalMaskedFields = 0;
 
                 if (!dryRun)
                 {
@@ -248,22 +253,18 @@ namespace GridTools.Javelin.MongoDbActivities
                     var docsToInsert = new List<BsonDocument>();
                     var bulkOps = new List<WriteModel<BsonDocument>>();
 
-                    foreach (var rawDoc in SecureVaultHelper.ReadDocumentsFromVault(vaultFile))
+                    foreach (var doc in SecureVaultHelper.ReadDocumentsFromVault(vaultFile))
                     {
-                        int maskedCount;
-                        var maskedDoc = maskingEngine.MaskDocument(rawDoc, out maskedCount);
-                        totalMaskedFields += maskedCount;
-
                         if (writeMode.Equals("Upsert", StringComparison.OrdinalIgnoreCase))
                         {
-                            BsonValue keyValue = maskedDoc.Contains(upsertKey) ? maskedDoc[upsertKey] : BsonNull.Value;
+                            BsonValue keyValue = doc.Contains(upsertKey) ? doc[upsertKey] : BsonNull.Value;
                             var filter = Builders<BsonDocument>.Filter.Eq(upsertKey, keyValue);
-                            var replaceModel = new ReplaceOneModel<BsonDocument>(filter, maskedDoc) { IsUpsert = true };
+                            var replaceModel = new ReplaceOneModel<BsonDocument>(filter, doc) { IsUpsert = true };
                             bulkOps.Add(replaceModel);
                         }
                         else
                         {
-                            docsToInsert.Add(maskedDoc);
+                            docsToInsert.Add(doc);
                         }
 
                         if (docsToInsert.Count >= batchSize)
@@ -297,11 +298,8 @@ namespace GridTools.Javelin.MongoDbActivities
                 }
                 else
                 {
-                    foreach (var rawDoc in SecureVaultHelper.ReadDocumentsFromVault(vaultFile))
+                    foreach (var doc in SecureVaultHelper.ReadDocumentsFromVault(vaultFile))
                     {
-                        int maskedCount;
-                        maskingEngine.MaskDocument(rawDoc, out maskedCount);
-                        totalMaskedFields += maskedCount;
                         loadedCount++;
                     }
                     GlobalSettings.MessageLogger.LogMessage("[MongoPipeline] DryRun ativo: gravação em destino suprimida.");

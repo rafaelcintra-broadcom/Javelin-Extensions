@@ -56,16 +56,16 @@ namespace GridTools.Javelin.MongoDbActivities
         [Description("Optional custom directory for the secure vault. If empty, creates an ephemeral encrypted vault in %TEMP%")]
         public InArgument<string> VaultDirectory { get; set; }
 
-        [Category("3. Data Assistant Tag Template (Optional for In-Flight Masking)")]
-        [DisplayName("Apply Masking In-Flight")]
-        [Description("If true, masks data before storing into the vault; requires DataAssistantTagTemplate")]
-        [DefaultValue(false)]
-        public InArgument<bool> ApplyMaskingInFlight { get; set; }
-
-        [Category("3. Data Assistant Tag Template (Optional for In-Flight Masking)")]
+        [RequiredArgument]
+        [Category("3. Data Assistant Tag Template")]
         [DisplayName("Data Assistant Tag Template Name")]
-        [Description("Nome do Template de TAG do Data Assistant caso ApplyMaskingInFlight seja true.")]
+        [Description("Nome do Template de TAG do Data Assistant no TDM Portal (ex: MONGODB_PII_TAG_TEMPLATE). OBRIGATÓRIO: os dados são SEMPRE mascarados na memória antes de gravar no cofre.")]
         public InArgument<string> DataAssistantTagTemplate { get; set; }
+
+        [Category("3. Data Assistant Tag Template")]
+        [DisplayName("TDM Project Name / ID")]
+        [Description("Opcional: ID ou Nome do Projeto no TDM para carregar regras específicas de projeto")]
+        public InArgument<string> ProjectIdentifier { get; set; }
 
         [Category("4. Output")]
         [DisplayName("Vault File Path")]
@@ -81,6 +81,10 @@ namespace GridTools.Javelin.MongoDbActivities
         public OutArgument<long> ExtractedCount { get; set; }
 
         [Category("4. Output")]
+        [DisplayName("Total PII Fields Masked")]
+        public OutArgument<int> TotalPiiFieldsMasked { get; set; }
+
+        [Category("4. Output")]
         [DisplayName("SHA256 Checksum")]
         public OutArgument<string> Sha256Checksum { get; set; }
 
@@ -90,6 +94,14 @@ namespace GridTools.Javelin.MongoDbActivities
             {
                 base.Execute(context);
 
+                string templateName = DataAssistantTagTemplate.Get(context);
+                if (string.IsNullOrWhiteSpace(templateName))
+                {
+                    throw new InvalidOperationException(
+                        "SEGURANÇA TDM: O campo 'DataAssistantTagTemplate' é obrigatório. " +
+                        "A extração foi bloqueada para impedir o armazenamento de dados brutos não mascarados no cofre.");
+                }
+
                 string connStr = ConnectionString.Get(context);
                 string dbName = DatabaseName.Get(context);
                 string collName = CollectionName.Get(context);
@@ -98,28 +110,23 @@ namespace GridTools.Javelin.MongoDbActivities
                 string sortStr = SortJson.Get(context);
                 int? limit = Limit.Get(context);
                 string customVaultDir = VaultDirectory.Get(context);
-                bool applyMasking = ApplyMaskingInFlight.Get(context);
-                string templateName = DataAssistantTagTemplate.Get(context);
+                string projIdStr = ProjectIdentifier.Get(context);
+                long? projId = null;
+                if (!string.IsNullOrWhiteSpace(projIdStr) && long.TryParse(projIdStr, out long pVal))
+                {
+                    projId = pVal;
+                }
 
                 if (string.IsNullOrWhiteSpace(filterStr))
                     filterStr = "{}";
 
-                TdmDataPainterEngine maskingEngine = null;
-                if (applyMasking)
-                {
-                    if (string.IsNullOrWhiteSpace(templateName))
-                    {
-                        throw new InvalidOperationException(
-                            "SEGURANÇA TDM: 'ApplyMaskingInFlight' está ativo, mas o campo 'DataAssistantTagTemplate' não foi informado. " +
-                            "Informe o nome do Template de TAG do Data Assistant para extração com mascaramento.");
-                    }
-                    var rules = TdmDataAssistantTemplateResolver.FetchTemplateRules(templateName);
-                    maskingEngine = new TdmDataPainterEngine(rules);
-                }
+                // Busca e valida as regras no TDM Portal (Trava de Segurança fail-closed)
+                var rules = TdmDataAssistantTemplateResolver.FetchTemplateRules(templateName, projectId: projId);
+                var maskingEngine = new TdmDataPainterEngine(rules);
 
                 GlobalSettings.MessageLogger.LogMessage(
-                    "[MongoExtractToVault] Iniciando extração segura de PROD: {0}.{1} (Filtro: {2})",
-                    dbName, collName, filterStr);
+                    "[MongoExtractToVault] Iniciando extração segura com mascaramento obrigatório de PROD: {0}.{1} (Template: '{2}', {3} regras)",
+                    dbName, collName, templateName, rules.Count);
 
                 // 1. Instancia Cofre Seguro (Barreiras 1 e 2: ACL NTFS + Windows EFS)
                 string vaultDir = SecureVaultHelper.CreateSecureVaultDirectory(customVaultDir);
@@ -148,7 +155,9 @@ namespace GridTools.Javelin.MongoDbActivities
                     findFluent = findFluent.Limit(limit.Value);
                 }
 
-                // 3. Executa streaming de documentos e grava no cofre com EFS/ACL/RAM Temporary (Barreira 3)
+                int totalMaskedFields = 0;
+
+                // 3. Executa streaming de documentos: SEMPRE aplica mascaramento na RAM antes de gravar no cofre
                 IEnumerable<BsonDocument> DocumentStream()
                 {
                     using (var cursor = findFluent.ToCursor())
@@ -157,15 +166,10 @@ namespace GridTools.Javelin.MongoDbActivities
                         {
                             foreach (var doc in cursor.Current)
                             {
-                                if (applyMasking && maskingEngine != null)
-                                {
-                                    int count;
-                                    yield return maskingEngine.MaskDocument(doc, out count);
-                                }
-                                else
-                                {
-                                    yield return doc;
-                                }
+                                int count;
+                                var masked = maskingEngine.MaskDocument(doc, out count);
+                                totalMaskedFields += count;
+                                yield return masked;
                             }
                         }
                     }
@@ -178,11 +182,12 @@ namespace GridTools.Javelin.MongoDbActivities
 
                 VaultFilePath.Set(context, vaultFilePath);
                 ExtractedCount.Set(context, totalExtracted);
+                TotalPiiFieldsMasked.Set(context, totalMaskedFields);
                 Sha256Checksum.Set(context, sha256);
 
                 GlobalSettings.MessageLogger.LogMessage(
-                    "[MongoExtractToVault] Extração para o cofre finalizada com sucesso! Documentos: {0}, Checksum: {1}, Arquivo: {2}",
-                    totalExtracted, sha256, vaultFilePath);
+                    "[MongoExtractToVault] Extração com mascaramento finalizada com sucesso! Documentos: {0}, Campos Mascarados: {1}, Checksum: {2}, Arquivo: {3}",
+                    totalExtracted, totalMaskedFields, sha256, vaultFilePath);
             }
             catch (Exception ex)
             {

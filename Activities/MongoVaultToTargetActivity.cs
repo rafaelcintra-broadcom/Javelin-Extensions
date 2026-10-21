@@ -36,13 +36,12 @@ namespace GridTools.Javelin.MongoDbActivities
         [DisplayName("Target Collection Name")]
         public InArgument<string> TargetCollectionName { get; set; }
 
-        [RequiredArgument]
-        [Category("3. Data Assistant Tag Template")]
+        [Category("3. Data Assistant Tag Template (Optional for Double-Masking)")]
         [DisplayName("Data Assistant Tag Template Name")]
-        [Description("Nome do Template de TAG do Data Assistant no TDM Portal (ex: MONGODB_PII_TAG_TEMPLATE). OBRIGATÓRIO.")]
+        [Description("Opcional: Informe se desejar aplicar regras adicionais de mascaramento durante a carga")]
         public InArgument<string> DataAssistantTagTemplate { get; set; }
 
-        [Category("3. Data Assistant Tag Template")]
+        [Category("3. Data Assistant Tag Template (Optional for Double-Masking)")]
         [DisplayName("TDM Project Name / ID")]
         public InArgument<string> ProjectIdentifier { get; set; }
 
@@ -98,13 +97,6 @@ namespace GridTools.Javelin.MongoDbActivities
                 base.Execute(context);
 
                 string templateName = DataAssistantTagTemplate.Get(context);
-                if (string.IsNullOrWhiteSpace(templateName))
-                {
-                    throw new InvalidOperationException(
-                        "SEGURANÇA TDM: O campo 'DataAssistantTagTemplate' é obrigatório. " +
-                        "A execução foi bloqueada para impedir o envio de dados não mascarados ao destino.");
-                }
-
                 vaultPath = VaultFilePath.Get(context);
                 string targetConnStr = TargetConnectionString.Get(context);
                 string targetDbName = TargetDatabaseName.Get(context);
@@ -126,13 +118,18 @@ namespace GridTools.Javelin.MongoDbActivities
                     throw new FileNotFoundException("Arquivo do cofre não encontrado: " + vaultPath);
                 }
 
-                // 1. Busca e valida as regras do Tag Template no TDM Portal (Trava de Segurança)
-                var resolvedRules = TdmDataAssistantTemplateResolver.FetchTemplateRules(
-                    templateName, projectId: projId);
+                TdmDataPainterEngine maskingEngine = null;
+                if (!string.IsNullOrWhiteSpace(templateName))
+                {
+                    var resolvedRules = TdmDataAssistantTemplateResolver.FetchTemplateRules(templateName, projectId: projId);
+                    maskingEngine = new TdmDataPainterEngine(resolvedRules);
+                    GlobalSettings.MessageLogger.LogMessage(
+                        "[MongoVaultToTarget] Template adicional '{0}' aplicado ({1} regras ativas).", templateName, resolvedRules.Count);
+                }
 
                 GlobalSettings.MessageLogger.LogMessage(
-                    "[MongoVaultToTarget] Tag Template '{0}' validado ({1} regras ativas). Lendo cofre '{2}' e carregando em NÃO-PROD: {3}.{4}",
-                    templateName, resolvedRules.Count, vaultPath, targetDbName, targetCollName);
+                    "[MongoVaultToTarget] Lendo cofre seguro '{0}' e carregando em NÃO-PROD: {1}.{2}",
+                    vaultPath, targetDbName, targetCollName);
 
                 var targetDb = MongoConnectionHelper.GetDatabase(targetConnStr, targetDbName);
                 if (dropCollection)
@@ -144,7 +141,6 @@ namespace GridTools.Javelin.MongoDbActivities
                 }
 
                 var targetCollection = targetDb.GetCollection<BsonDocument>(targetCollName);
-                var maskingEngine = new TdmDataPainterEngine(resolvedRules);
 
                 long totalLoaded = 0;
                 int totalMaskedFields = 0;
@@ -152,22 +148,26 @@ namespace GridTools.Javelin.MongoDbActivities
                 var bulkOps = new List<WriteModel<BsonDocument>>();
                 var docsToInsert = new List<BsonDocument>();
 
-                foreach (var rawDoc in SecureVaultHelper.ReadDocumentsFromVault(vaultPath))
+                foreach (var doc in SecureVaultHelper.ReadDocumentsFromVault(vaultPath))
                 {
-                    int maskedCount;
-                    var maskedDoc = maskingEngine.MaskDocument(rawDoc, out maskedCount);
-                    totalMaskedFields += maskedCount;
+                    BsonDocument finalDoc = doc;
+                    if (maskingEngine != null)
+                    {
+                        int maskedCount;
+                        finalDoc = maskingEngine.MaskDocument(doc, out maskedCount);
+                        totalMaskedFields += maskedCount;
+                    }
 
                     if (writeMode.Equals("Upsert", StringComparison.OrdinalIgnoreCase))
                     {
-                        BsonValue keyValue = maskedDoc.Contains(keyField) ? maskedDoc[keyField] : BsonNull.Value;
+                        BsonValue keyValue = finalDoc.Contains(keyField) ? finalDoc[keyField] : BsonNull.Value;
                         var filter = Builders<BsonDocument>.Filter.Eq(keyField, keyValue);
-                        var replaceModel = new ReplaceOneModel<BsonDocument>(filter, maskedDoc) { IsUpsert = true };
+                        var replaceModel = new ReplaceOneModel<BsonDocument>(filter, finalDoc) { IsUpsert = true };
                         bulkOps.Add(replaceModel);
                     }
                     else
                     {
-                        docsToInsert.Add(maskedDoc);
+                        docsToInsert.Add(finalDoc);
                     }
 
                     if (docsToInsert.Count >= batchSize)
