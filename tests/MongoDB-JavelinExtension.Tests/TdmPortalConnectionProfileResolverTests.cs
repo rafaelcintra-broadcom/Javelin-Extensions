@@ -56,5 +56,31 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers.Tests
             Assert.Contains("NON_EXISTENT_PROFILE_XYZ", ex.Message);
             Assert.Contains("https://localhost:9999", ex.Message);
         }
+
+        [Fact]
+        public void CryptUtil_DecryptsEncryptedTdmPassword()
+        {
+            string encrypted = "{cry}KBb6obDI4E0EgSCsHlFJbNq9wwaE2iG1r4+KlAVOMAX8";
+            string decrypted = GridTools.Javelin.MongoDbActivities.Helpers.Crypto.CryptUtil.DecryptPasswordIfNeeded(encrypted);
+            Assert.Equal("TDM@123", decrypted);
+        }
+
+        [Fact]
+        public void CryptUtil_DecryptsEncryptedTdmPasswordWithoutCryPrefix()
+        {
+            // Senhas do Connection Profile retornadas pelo TDM Portal não vêm com o prefixo {cry}
+            string rawEncryptedFromProfile = "BdXneRBJbFTXwag2ivDci3zf6V65dpGNDyZ3WLcqN6-k1xzdFHIAszqN3lx0I+jwM52v";
+            string decrypted = GridTools.Javelin.MongoDbActivities.Helpers.Crypto.CryptUtil.DecryptPasswordIfNeeded(rawEncryptedFromProfile);
+            Assert.NotNull(decrypted);
+            Assert.NotEqual(rawEncryptedFromProfile, decrypted);
+        }
+
+        [Fact]
+        public void CryptUtil_LeavesPlainTextPasswordUntouched()
+        {
+            string plain = "MyNormalPassword123!";
+            string decrypted = GridTools.Javelin.MongoDbActivities.Helpers.Crypto.CryptUtil.DecryptPasswordIfNeeded(plain);
+            Assert.Equal(plain, decrypted);
+        }
     }
 }

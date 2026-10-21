@@ -21,6 +21,7 @@
     <!-- Compile the Helper files directly under net8.0 for testing -->
     <Compile Include="..\..\Helpers\MongoSqlFilterParser.cs" Link="Helpers\MongoSqlFilterParser.cs" />
     <Compile Include="..\..\Helpers\TdmPortalConnectionProfileResolver.cs" Link="Helpers\TdmPortalConnectionProfileResolver.cs" />
+    <Compile Include="..\..\Helpers\Crypto\TdmCryptEngine.cs" Link="Helpers\Crypto\TdmCryptEngine.cs" />
     <Compile Include="..\..\Helpers\TdmDataAssistantTemplateResolver.cs" Link="Helpers\TdmDataAssistantTemplateResolver.cs" />
     <Compile Include="..\..\Helpers\TdmDataPainterEngine.cs" Link="Helpers\TdmDataPainterEngine.cs" />
     <Compile Include="..\..\Helpers\SecureVaultHelper.cs" Link="Helpers\SecureVaultHelper.cs" />

@@ -75,7 +75,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             if (!string.IsNullOrWhiteSpace(envUrl))
                 return envUrl.Trim().TrimEnd('/');
 
-            // Tenta obter porta e protocolo do application.properties local
+            // Tenta obter porta, host e protocolo do application.properties local
             string propPath = FindTdmApplicationPropertiesPath();
             if (!string.IsNullOrWhiteSpace(propPath))
             {
@@ -90,14 +90,26 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                     if (props.TryGetValue("server.ssl.enabled", out string sSsl))
                         sslEnabled = sSsl.Trim();
 
+                    string host = "localhost";
+                    if (props.TryGetValue("server.address", out string sAddr) && !string.IsNullOrWhiteSpace(sAddr))
+                    {
+                        string cleanAddr = sAddr.Trim();
+                        if (!cleanAddr.Equals("0.0.0.0") && !cleanAddr.Equals("::"))
+                            host = cleanAddr;
+                    }
+                    else if (props.TryGetValue("tdmweb.address", out string sTdmAddr) && !string.IsNullOrWhiteSpace(sTdmAddr))
+                    {
+                        host = sTdmAddr.Trim();
+                    }
+
                     if (!string.IsNullOrWhiteSpace(port))
                     {
                         bool isHttps = !string.Equals(sslEnabled, "false", StringComparison.OrdinalIgnoreCase);
                         string proto = isHttps ? "https" : "http";
                         GlobalSettings.MessageLogger.LogMessage(
-                            "[TdmProfileResolver] URL do Portal detectada via application.properties local ({0}): {1}://localhost:{2}",
-                            propPath, proto, port);
-                        return $"{proto}://localhost:{port}";
+                            "[TdmProfileResolver] URL do Portal detectada via application.properties local ({0}): {1}://{2}:{3}",
+                            propPath, proto, host, port);
+                        return $"{proto}://{host}:{port}";
                     }
                 }
                 catch { }
@@ -107,59 +119,88 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
         }
 
         /// <summary>
-        /// Localiza o arquivo application.properties nas pastas padrão de instalação do TDM.
+        /// Localiza o arquivo application.properties seguindo o padrão oficial do TDM:
+        /// 1. %CATDMWEB_HOME%\conf\application.properties (padrão oficial PropertyReaderUtils / TDM installer)
+        /// 2. %TDM_HOME%\conf\application.properties
+        /// 3. spring.config.additional-location / TDM_PROPERTIES_PATH
+        /// 4. Diretórios padrões conhecidos da Broadcom / CA
         /// </summary>
         private static string FindTdmApplicationPropertiesPath()
         {
-            var candidates = new List<string>
-            {
-                Environment.GetEnvironmentVariable("TDM_PROPERTIES_PATH"),
-                Environment.GetEnvironmentVariable("TDM_CONFIG_PATH")
-            };
+            var candidates = new List<string>();
 
-            string tdmHome = Environment.GetEnvironmentVariable("TDM_HOME") ??
-                             Environment.GetEnvironmentVariable("CATDM_HOME") ??
-                             Environment.GetEnvironmentVariable("TDM_WEB_HOME");
-
-            if (!string.IsNullOrWhiteSpace(tdmHome))
+            // 1. Variável oficial CATDMWEB_HOME (definida pelo instalador MSI do TDM Portal)
+            string catdmwebHome = Environment.GetEnvironmentVariable("CATDMWEB_HOME");
+            if (!string.IsNullOrWhiteSpace(catdmwebHome))
             {
-                candidates.Add(Path.Combine(tdmHome, "application.properties"));
-                candidates.Add(Path.Combine(tdmHome, "conf", "application.properties"));
-                candidates.Add(Path.Combine(tdmHome, "config", "application.properties"));
-                candidates.Add(Path.Combine(tdmHome, "TDMWeb", "application.properties"));
+                candidates.Add(Path.Combine(catdmwebHome, "conf", "application.properties"));
+                candidates.Add(Path.Combine(catdmwebHome, "application.properties"));
             }
 
+            // 2. Variável oficial TDM_HOME (definida para storage/appdata e conf do TDM)
+            string tdmHome = Environment.GetEnvironmentVariable("TDM_HOME");
+            if (!string.IsNullOrWhiteSpace(tdmHome))
+            {
+                candidates.Add(Path.Combine(tdmHome, "conf", "application.properties"));
+                candidates.Add(Path.Combine(tdmHome, "application.properties"));
+            }
+
+            // 3. Variáveis adicionais e propriedades de ambiente
+            string springConfig = Environment.GetEnvironmentVariable("spring.config.additional-location") ??
+                                 Environment.GetEnvironmentVariable("SPRING_CONFIG_ADDITIONAL_LOCATION") ??
+                                 Environment.GetEnvironmentVariable("TDM_PROPERTIES_PATH") ??
+                                 Environment.GetEnvironmentVariable("TDM_CONFIG_PATH");
+            if (!string.IsNullOrWhiteSpace(springConfig))
+            {
+                // Se contiver múltiplos caminhos separados por vírgula (formato Spring Boot)
+                var parts = springConfig.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var part in parts)
+                {
+                    string cleaned = part.Trim();
+                    if (cleaned.StartsWith("optional:file:", StringComparison.OrdinalIgnoreCase))
+                        cleaned = cleaned.Substring("optional:file:".Length);
+                    else if (cleaned.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
+                        cleaned = cleaned.Substring("file:".Length);
+
+                    if (!string.IsNullOrWhiteSpace(cleaned))
+                        candidates.Add(cleaned);
+                }
+            }
+
+            // 4. Pastas padrão de instalação no Windows Program Files
             string progFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
             if (!string.IsNullOrWhiteSpace(progFiles))
             {
-                candidates.Add(Path.Combine(progFiles, "CA", "CA Test Data Manager Portal", "application.properties"));
                 candidates.Add(Path.Combine(progFiles, "CA", "CA Test Data Manager Portal", "conf", "application.properties"));
-                candidates.Add(Path.Combine(progFiles, "CA", "CA Test Data Manager Portal", "TDMWeb", "application.properties"));
-                candidates.Add(Path.Combine(progFiles, "CA", "Test Data Manager", "TDMWeb", "application.properties"));
-                candidates.Add(Path.Combine(progFiles, "CA", "Test Data Manager", "application.properties"));
-                candidates.Add(Path.Combine(progFiles, "Broadcom", "CA Test Data Manager Portal", "application.properties"));
+                candidates.Add(Path.Combine(progFiles, "CA", "CA Test Data Manager Portal", "application.properties"));
                 candidates.Add(Path.Combine(progFiles, "Broadcom", "CA Test Data Manager Portal", "conf", "application.properties"));
+                candidates.Add(Path.Combine(progFiles, "CA", "Test Data Manager", "conf", "application.properties"));
             }
 
             string progFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
             if (!string.IsNullOrWhiteSpace(progFilesX86))
             {
-                candidates.Add(Path.Combine(progFilesX86, "CA", "CA Test Data Manager Portal", "application.properties"));
                 candidates.Add(Path.Combine(progFilesX86, "CA", "CA Test Data Manager Portal", "conf", "application.properties"));
-                candidates.Add(Path.Combine(progFilesX86, "CA", "Test Data Manager", "TDMWeb", "application.properties"));
+                candidates.Add(Path.Combine(progFilesX86, "CA", "CA Test Data Manager Portal", "application.properties"));
             }
 
-            // Diretórios padrão no disco C:\
-            candidates.Add(@"C:\Program Files\CA\CA Test Data Manager Portal\application.properties");
+            // Diretórios padrão comuns no disco C:\
             candidates.Add(@"C:\Program Files\CA\CA Test Data Manager Portal\conf\application.properties");
-            candidates.Add(@"C:\Program Files\CA\Test Data Manager\TDMWeb\application.properties");
-            candidates.Add(@"C:\CA_TDM\TDMWeb\application.properties");
-            candidates.Add(@"C:\TDM\TDMWeb\application.properties");
+            candidates.Add(@"C:\Program Files\CA\CA Test Data Manager Portal\application.properties");
+            candidates.Add(@"C:\CA\CA Test Data Manager Portal\conf\application.properties");
+            candidates.Add(@"C:\CA\CA Test Data Manager Portal\application.properties");
+            candidates.Add(@"C:\CA_TDM\conf\application.properties");
+            candidates.Add(@"C:\TDM\conf\application.properties");
+            candidates.Add(@"C:\Grid-Tools\TDMWeb\conf\application.properties");
 
             foreach (var path in candidates)
             {
-                if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
-                    return path;
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
+                        return path;
+                }
+                catch { }
             }
 
             return null;
@@ -274,7 +315,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                         {
                             if (props.TryGetValue(pk, out string val) && !string.IsNullOrWhiteSpace(val))
                             {
-                                adminPass = val.Trim();
+                                adminPass = GridTools.Javelin.MongoDbActivities.Helpers.Crypto.CryptUtil.DecryptPasswordIfNeeded(val.Trim());
                                 break;
                             }
                         }
@@ -408,24 +449,33 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             string encodedName = Uri.EscapeDataString(cleanId);
             var endpoints = new List<string>
             {
+                // Microserviço oficial ConnectionProfileManager
                 $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/connectionProfiles/{encodedName}",
-                $"{baseUrl}/TestDataManager/api/ca/v1/connectionProfiles/{encodedName}",
-                $"{baseUrl}/api/ca/v1/connectionProfiles/{encodedName}",
+                $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/connectionProfiles",
                 $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/connectionProfiles?name={encodedName}&size=100",
                 $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/connectionProfiles?size=1000",
-                $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/connectionProfiles",
+                $"{baseUrl}/connectionProfileManager/api/ca/v1/connectionProfiles/{encodedName}",
+                $"{baseUrl}/connectionProfileManager/api/ca/v1/connectionProfiles",
+                // Microserviço TDMModelService / DataModel
+                $"{baseUrl}/TDMModelService/api/ca/v1/connectionProfiles/{encodedName}",
+                $"{baseUrl}/TDMModelService/api/ca/v1/connectionProfiles",
+                // Endpoints no contextPath padrão /TestDataManager e raiz
+                $"{baseUrl}/TestDataManager/api/ca/v1/connectionProfiles/{encodedName}",
+                $"{baseUrl}/TestDataManager/api/ca/v1/connectionProfiles",
                 $"{baseUrl}/TestDataManager/api/ca/v1/connectionProfiles?name={encodedName}&size=100",
                 $"{baseUrl}/TestDataManager/api/ca/v1/connectionProfiles?size=1000",
-                $"{baseUrl}/TestDataManager/api/ca/v1/connectionProfiles",
+                $"{baseUrl}/api/ca/v1/connectionProfiles/{encodedName}",
                 $"{baseUrl}/api/ca/v1/connectionProfiles"
             };
 
             if (projectId.HasValue && projectId.Value > 0)
             {
                 endpoints.Insert(0, $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/projects/{projectId.Value}/connectionProfiles/{encodedName}");
+                endpoints.Insert(0, $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/projects/{projectId.Value}/connectionProfiles?name={encodedName}&size=100");
+                endpoints.Insert(0, $"{baseUrl}/connectionProfileManager/api/ca/v1/projects/{projectId.Value}/connectionProfiles/{encodedName}");
+                endpoints.Insert(0, $"{baseUrl}/TDMModelService/api/ca/v1/projects/{projectId.Value}/connectionProfiles/{encodedName}");
                 endpoints.Insert(0, $"{baseUrl}/TestDataManager/api/ca/v1/projects/{projectId.Value}/connectionProfiles/{encodedName}");
                 endpoints.Insert(0, $"{baseUrl}/TestDataManager/api/ca/v1/projects/{projectId.Value}/connectionProfiles?name={encodedName}&size=100");
-                endpoints.Insert(0, $"{baseUrl}/TDMConnectionProfileService/api/ca/v1/projects/{projectId.Value}/connectionProfiles?name={encodedName}&size=100");
             }
 
             foreach (var endpoint in endpoints)
@@ -555,8 +605,28 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                     string user = item.Value<string>("username") ?? item.Value<string>("user") ?? item.Value<string>("userName");
                     string pass = item.Value<string>("password") ?? item.Value<string>("userPassword") ?? item.Value<string>("profPassword");
                     string dbName = item.Value<string>("database") ?? item.Value<string>("databaseName") ?? item.Value<string>("dbName") ?? item.Value<string>("schema");
+                    
                     string host = item.Value<string>("server") ?? item.Value<string>("host") ?? item.Value<string>("serverName") ?? item.Value<string>("hostname");
-                    int port = item.Value<int?>("port") ?? item.Value<int?>("serverPort") ?? 27017;
+                    int port = 27017;
+                    var portToken = item["port"];
+                    if (portToken != null)
+                    {
+                        if (portToken.Type == JTokenType.Integer)
+                            port = portToken.Value<int>();
+                        else if (portToken.Type == JTokenType.String && int.TryParse(portToken.Value<string>(), out int parsedPort) && parsedPort > 0)
+                            port = parsedPort;
+                    }
+
+                    // Se server contiver host:porta (ex: "localhost:27017")
+                    if (!string.IsNullOrWhiteSpace(host) && host.Contains(":"))
+                    {
+                        var parts = host.Split(':');
+                        if (parts.Length == 2 && int.TryParse(parts[1], out int hpPort) && hpPort > 0)
+                        {
+                            host = parts[0];
+                            port = hpPort;
+                        }
+                    }
 
                     // Se a URL estiver dentro de um objeto de propriedades ou config
                     if (string.IsNullOrWhiteSpace(url) && item["properties"] is JObject props)
@@ -576,7 +646,8 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                         {
                             try
                             {
-                                effectivePass = new JavelinPasswordDecryptor().SubstitutePasswordsInString(pass);
+                                effectivePass = GridTools.Javelin.MongoDbActivities.Helpers.Crypto.CryptUtil.DecryptPasswordIfNeeded(pass);
+                                effectivePass = new JavelinPasswordDecryptor().SubstitutePasswordsInString(effectivePass);
                             }
                             catch { }
                         }

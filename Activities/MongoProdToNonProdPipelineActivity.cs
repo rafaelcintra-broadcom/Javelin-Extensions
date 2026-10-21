@@ -249,10 +249,21 @@ namespace GridTools.Javelin.MongoDbActivities
                 int totalMaskedFields = 0;
 
                 // 3. Executa streaming de documentos de PROD: Mascara na RAM antes de persistir no cofre
+                long totalCountEstimate = 0;
+                try
+                {
+                    totalCountEstimate = srcCollection.CountDocuments(filterDoc);
+                    GlobalSettings.MessageLogger.LogMessage(
+                        "[MongoPipeline] Total de documentos identificados na origem '{0}.{1}': {2}",
+                        srcDb, srcColl, totalCountEstimate);
+                }
+                catch { }
+
                 IEnumerable<BsonDocument> DocumentStream()
                 {
                     using (var cursor = findFluent.ToCursor())
                     {
+                        long processed = 0;
                         while (cursor.MoveNext())
                         {
                             foreach (var doc in cursor.Current)
@@ -260,6 +271,16 @@ namespace GridTools.Javelin.MongoDbActivities
                                 int count;
                                 var masked = maskingEngine.MaskDocument(doc, out count);
                                 totalMaskedFields += count;
+                                processed++;
+
+                                if (processed % 1000 == 0 || (totalCountEstimate > 0 && processed == totalCountEstimate))
+                                {
+                                    GlobalSettings.MessageLogger.LogMessage(
+                                        "[MongoPipeline] Progresso do mascaramento/extração: {0}{1} documentos processados...",
+                                        processed,
+                                        totalCountEstimate > 0 ? $" de {totalCountEstimate}" : "");
+                                }
+
                                 yield return masked;
                             }
                         }

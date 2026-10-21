@@ -84,15 +84,20 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                 cleanTemplateName, baseUrl);
 
             // 2. LISTA DE ENDPOINTS EM ORDEM ESTRITA DE PRIORIDADE:
-            // ➔ A 1ª OPÇÃO É A API DIRETA DE TEMPLATES DO DATA ASSISTANT
+            // ➔ A 1ª OPÇÃO É A API DIRETA DE TEMPLATES DO DATA ASSISTANT (TDMGeneratorService)
             var endpoints = new List<string>
             {
-                // PRIORIDADE 1: Template específico do Data Assistant por Nome (Global ou por Projeto)
+                // PRIORIDADE 1: Endpoints oficiais do TDMGeneratorService (onde residem os Templates de Data Assistant)
+                $"{baseUrl}/TDMGeneratorService/api/ca/v1/data-assistant/template",
+                $"{baseUrl}/TDMGeneratorService/api/ca/v1/data-assistant/templates",
+                $"{baseUrl}/TDMGeneratorService/api/ca/v1/data-assistant/template/{Uri.EscapeDataString(cleanTemplateName)}",
+                $"{baseUrl}/TDMGeneratorService/api/ca/v1/data-assistant/templates/{Uri.EscapeDataString(cleanTemplateName)}",
+
+                // PRIORIDADE 2: Model Service / Project Data Assistant Templates
                 projectId.HasValue && projectId.Value > 0
                     ? $"{baseUrl}/TDMModelService/api/ca/v1/projects/{projectId.Value}/data-assistant/templates/{Uri.EscapeDataString(cleanTemplateName)}"
                     : $"{baseUrl}/TDMModelService/api/ca/v1/data-assistant/templates/{Uri.EscapeDataString(cleanTemplateName)}",
 
-                // PRIORIDADE 1.1: Listagem completa de templates do Data Assistant
                 projectId.HasValue && projectId.Value > 0
                     ? $"{baseUrl}/TDMModelService/api/ca/v1/projects/{projectId.Value}/data-assistant/templates"
                     : $"{baseUrl}/TDMModelService/api/ca/v1/data-assistant/templates",
@@ -100,12 +105,12 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                 $"{baseUrl}/TestDataManager/api/ca/v1/data-assistant/templates/{Uri.EscapeDataString(cleanTemplateName)}",
                 $"{baseUrl}/TestDataManager/api/ca/v1/data-assistant/templates",
 
-                // PRIORIDADE 2: Árvore hierárquica do Profiler / Tag Containers
+                // PRIORIDADE 3: Árvore hierárquica do Profiler / Tag Containers (Fallback Global)
                 projectId.HasValue && projectId.Value > 0
                     ? $"{baseUrl}/TDMModelService/api/ca/v1/profiler/classifiers/containers/0/project/{projectId.Value}"
                     : $"{baseUrl}/TDMModelService/api/ca/v1/profiler/classifiers/containers/0?recursive=1&scope=global",
 
-                // PRIORIDADE 3: Classificadores diretos do Profiler e Definições de Tag
+                // PRIORIDADE 4: Classificadores diretos do Profiler e Definições de Tag
                 $"{baseUrl}/TDMModelService/api/ca/v1/profiler/classifiers",
                 $"{baseUrl}/TDMModelService/api/ca/v1/tagDefinitions"
             };
@@ -239,11 +244,11 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
 
                 foreach (var item in items)
                 {
-                    string tagName = item.Value<string>("tagName") ?? item.Value<string>("tag") ?? item.Value<string>("name") ?? "PII";
+                    string tagName = item.Value<string>("columnTypeDesc") ?? item.Value<string>("dataType") ?? item.Value<string>("columnType") ?? item.Value<string>("tagName") ?? item.Value<string>("tag") ?? item.Value<string>("name") ?? "PII";
                     string desc = item.Value<string>("description");
-                    string dataPainterExpr = item.Value<string>("defaultValue") ?? item.Value<string>("defaultDataPainterExpr") ?? item.Value<string>("dataPainterExpr");
+                    string dataPainterExpr = item.Value<string>("rule") ?? item.Value<string>("defaultValue") ?? item.Value<string>("defaultDataPainterExpr") ?? item.Value<string>("dataPainterExpr");
                     string pattern = item.Value<string>("regexPattern") ?? item.Value<string>("pattern");
-                    string configName = item.Value<string>("configName") ?? tagName;
+                    string configName = item.Value<string>("columnType") ?? item.Value<string>("configName") ?? tagName;
 
                     if (string.IsNullOrWhiteSpace(pattern))
                     {
