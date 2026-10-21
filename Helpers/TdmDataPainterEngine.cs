@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -129,8 +130,8 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             var matchRange = Regex.Match(formula, @"@randrange\(([\d\.]+),\s*([\d\.]+)(?:,\s*(\d+))?\)@");
             if (matchRange.Success)
             {
-                double min = double.Parse(matchRange.Groups[1].Value);
-                double max = double.Parse(matchRange.Groups[2].Value);
+                double min = double.Parse(matchRange.Groups[1].Value, CultureInfo.InvariantCulture);
+                double max = double.Parse(matchRange.Groups[2].Value, CultureInfo.InvariantCulture);
                 double val = min + _random.NextDouble() * (max - min);
                 if (matchRange.Groups[3].Success)
                 {
@@ -139,7 +140,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                 }
                 if (originalValue != null && originalValue.IsNumeric)
                     return new BsonDouble(val);
-                return val.ToString();
+                return new BsonDouble(val);
             }
 
             // @randlov(...)@ ou @randval(...)@

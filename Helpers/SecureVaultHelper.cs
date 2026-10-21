@@ -61,7 +61,8 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
         {
             try
             {
-                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+#if NETFRAMEWORK
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
                     return;
 
                 var dirInfo = new DirectoryInfo(directoryPath);
@@ -94,6 +95,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
 
                 dirInfo.SetAccessControl(dirSecurity);
                 GlobalSettings.MessageLogger.LogMessage("[SecureVault] Barreira 1 (ACL NTFS Restrita) aplicada com sucesso em {0}", directoryPath);
+#endif
             }
             catch (Exception ex)
             {

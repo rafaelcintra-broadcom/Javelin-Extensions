@@ -40,7 +40,9 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
 
         static TdmPortalConnectionProfileResolver()
         {
+#if NETFRAMEWORK
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11;
+#endif
             var handler = new HttpClientHandler
             {
                 ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
