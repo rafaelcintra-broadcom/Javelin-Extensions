@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broadcom TDM Javelin - Guia da Extensão Apache HBase</title>
+    <style>
+        :root {
+            --bcom-red: #CC092F;
+            --bcom-red-dark: #A60624;
+            --bcom-charcoal: #111827;
+            --bcom-slate: #4B5563;
+            --bcom-bg-neutral: #F8FAFC;
+            --bcom-border: #E5E7EB;
+            --bcom-code-bg: #1E293B;
+            --bcom-green: #059669;
+            --bcom-blue: #2563EB;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #F3F4F6;
+            color: var(--bcom-charcoal);
+            line-height: 1.5;
+            font-size: 13.5px;
+            padding: 24px;
+        }
+        .content-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid var(--bcom-border);
+            border-top: 5px solid var(--bcom-red);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 36px 44px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--bcom-border);
+            padding-bottom: 18px;
+            margin-bottom: 24px;
+        }
+        .doc-title { font-size: 22px; font-weight: 700; color: var(--bcom-charcoal); letter-spacing: -0.3px; }
+        .doc-subtitle { font-size: 13px; color: var(--bcom-slate); font-weight: 400; margin-top: 3px; }
+        .badge-tag {
+            background: #FEE2E2;
+            color: var(--bcom-red-dark);
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            background-color: var(--bcom-bg-neutral);
+            border: 1px solid var(--bcom-border);
+            border-left: 4px solid var(--bcom-red);
+            border-radius: 4px;
+            padding: 12px 18px;
+            margin-bottom: 28px;
+        }
+        .meta-item { display: flex; flex-direction: column; }
+        .meta-label { font-size: 10.5px; text-transform: uppercase; color: var(--bcom-slate); font-weight: 600; }
+        .meta-value { font-size: 13px; font-weight: 600; color: var(--bcom-charcoal); margin-top: 2px; }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 28px 0 14px 0;
+            padding-bottom: 6px;
+            border-bottom: 1.5px solid var(--bcom-border);
+        }
+        .section-num {
+            background: var(--bcom-red);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .section-title { font-size: 16px; font-weight: 700; color: var(--bcom-charcoal); }
+        .callout {
+            background-color: #EFF6FF;
+            border-left: 4px solid var(--bcom-blue);
+            border-radius: 4px;
+            padding: 12px 16px;
+            margin: 14px 0;
+            font-size: 12.5px;
+            color: #1E3A8A;
+        }
+        .callout.warning { background-color: #FFFBEB; border-left-color: #D97706; color: #92400E; }
+        .callout.success { background-color: #ECFDF5; border-left-color: var(--bcom-green); color: #065F46; }
+        .callout.danger { background-color: #FEF2F2; border-left-color: var(--bcom-red); color: #991B1B; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+        .card {
+            background: #ffffff;
+            border: 1px solid var(--bcom-border);
+            border-radius: 6px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .card-header {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--bcom-charcoal);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .card-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            background: #E5E7EB;
+            color: var(--bcom-charcoal);
+        }
+        .table-container {
+            margin: 14px 0;
+            border: 1px solid var(--bcom-border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left; }
+        thead { background-color: #F8FAFC; border-bottom: 1.5px solid var(--bcom-border); }
+        th { padding: 9px 12px; font-weight: 700; color: var(--bcom-charcoal); font-size: 11.5px; text-transform: uppercase; }
+        td { padding: 9px 12px; border-bottom: 1px solid var(--bcom-border); color: var(--bcom-slate); vertical-align: top; }
+        tr:nth-child(even) { background-color: #FAFAFA; }
+        .param-name { font-family: Consolas, monospace; color: var(--bcom-red-dark); font-weight: 600; font-size: 12px; }
+        .param-type { font-size: 11px; color: #6B7280; font-style: italic; }
+        pre {
+            background-color: var(--bcom-code-bg);
+            color: #E2E8F0;
+            padding: 12px 14px;
+            border-radius: 5px;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 8px 0 12px 0;
+            line-height: 1.45;
+        }
+        code {
+            font-family: Consolas, monospace;
+            background-color: #F1F5F9;
+            color: #B91C1C;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 11.5px;
+        }
+        pre code { background-color: transparent; color: inherit; padding: 0; }
+        .footer {
+            margin-top: 36px;
+            border-top: 1px solid var(--bcom-border);
+            padding-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            color: var(--bcom-slate);
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+<div class="content-wrapper">
+
+    <div class="header">
+        <div>
+            <div class="doc-title">Broadcom CA Test Data Manager (TDM) — Javelin</div>
+            <div class="doc-subtitle">Guia Oficial da Extensão Nativa para Apache HBase (Modo SSH & REST API)</div>
+        </div>
+        <div style="text-align: right;">
+            <div class="badge-tag">Extensão Customizada</div>
+            <div style="font-size: 11px; color: var(--bcom-slate); margin-top: 6px;">Target: .NET Framework 4.6.1 / x64</div>
+        </div>
+    </div>
+
+    <div class="meta-banner">
+        <div class="meta-item">
+            <span class="meta-label">Produto</span>
+            <span class="meta-value">CA TDM Javelin</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Assembly</span>
+            <span class="meta-value">GridTools.Javelin.HBaseActivities.dll</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Conectividade</span>
+            <span class="meta-value">Dual Mode: SSH Shell + REST Stargate</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Autenticação</span>
+            <span class="meta-value">SSH Key/Senha, Kerberos, Knox Gateway</span>
+        </div>
+    </div>
+
+    <!-- SEÇÃO 1: VISÃO GERAL -->
+    <div class="section-header">
+        <div class="section-num">1</div>
+        <div class="section-title">Visão Geral & Arquitetura</div>
+    </div>
+    <p>
+        A extensão <strong>GridTools.Javelin.HBaseActivities</strong> fornece integração nativa completa de Big Data NoSQL entre os fluxos de trabalho do CA Test Data Manager (Javelin) e bancos de dados <strong>Apache HBase</strong>.
+        Ela foi construída sob uma arquitetura híbrida de dois modos operacionais para atender a qualquer topologia de rede:
+    </p>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-header">
+                <span>Modo 1: Conexão Direta via SSH (Edge Node)</span>
+                <span class="card-badge" style="background:#ECFDF5; color:#065F46;">Zero Alterações no Cluster</span>
+            </div>
+            <ul style="padding-left: 18px; color: var(--bcom-slate); font-size: 12.5px; line-height: 1.6;">
+                <li><strong>Sem necessidade do REST Daemon:</strong> Conecta diretamente a qualquer nó de borda (edge/bastion node) com cliente HBase via SSH e executa via <code>hbase shell -n</code>.</li>
+                <li><strong>Login Shell Automático:</strong> Carrega variáveis de ambiente (<code>/etc/profile</code>, <code>~/.bashrc</code>, <code>PATH</code>, <code>HBASE_HOME</code>).</li>
+                <li><strong>Parser Inteligente:</strong> Converte automaticamente as saídas colunares do HBase Shell em tabelas <code>DataTable</code> ADO.NET e arrays <code>JSON</code> utilizáveis no Javelin.</li>
+                <li><strong>Segurança Kerberos:</strong> Permite autenticação automática com <code>kinit</code> via Keytab antes de rodar os comandos.</li>
+                <li><strong>Túnel SSH:</strong> A atividade <code>HBaseSshTunnelActivity</code> permite criar túneis locais sob demanda caso a porta do HBase só esteja exposta em localhost.</li>
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <span>Modo 2: REST API / Apache Knox Gateway</span>
+                <span class="card-badge" style="background:#EFF6FF; color:#1E40AF;">HTTP / Stargate</span>
+            </div>
+            <ul style="padding-left: 18px; color: var(--bcom-slate); font-size: 12.5px; line-height: 1.6;">
+                <li><strong>Alta Performance HTTP:</strong> Comunicação REST com o HBase REST Server (porta 8080) ou através do gateway seguro Apache Knox.</li>
+                <li><strong>CRUD Completo:</strong> Endpoints dedicados para Get Row, Put Row, Scan com Filtros, Delete e Administração de Tabelas.</li>
+                <li><strong>Tratamento Automático de Base64:</strong> Toda a codificação e decodificação exigida pelo protocolo HBase REST é transparente.</li>
+                <li><strong>Pool de Conexões:</strong> Reutilização de conexões HTTP e autenticação via Basic Auth ou Bearer Token JWT.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- SEÇÃO 2: ATIVIDADES DISPONÍVEIS -->
+    <div class="section-header">
+        <div class="section-num">2</div>
+        <div class="section-title">Catálogo de Atividades no Javelin Toolbox</div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 22%;">Atividade</th>
+                    <th style="width: 12%;">Modo</th>
+                    <th style="width: 36%;">Descrição & Uso</th>
+                    <th style="width: 30%;">Saídas Principais</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="param-name">HBaseSshPutActivity</span></td>
+                    <td><span class="card-badge" style="background:#ECFDF5; color:#065F46;">SSH</span></td>
+                    <td>Insere ou atualiza registros via <code>put 'table', 'rk', 'col', 'val'</code> a partir de um JSON ou de uma DataTable de massa de dados.</td>
+                    <td><code>IsSuccess</code> (Boolean)<br><code>StatementsExecuted</code> (Int32)<br><code>RawOutput</code> (String)</td>
+                </tr>
+                <tr>
+                    <td><span class="param-name">HBaseSshScanActivity</span></td>
+                    <td><span class="card-badge" style="background:#ECFDF5; color:#065F46;">SSH</span></td>
+                    <td>Executa varredura com StartRow, StopRow, colunas específicas e limites, convertendo os resultados para dados tabulares do TDM.</td>
+                    <td><code>OutDataTable</code> (DataTable)<br><code>OutJson</code> (String JSON)<br><code>RowCount</code> (Int32)</td>
+                </tr>
+                <tr>
+                    <td><span class="param-name">HBaseSshShellActivity</span></td>
+                    <td><span class="card-badge" style="background:#ECFDF5; color:#065F46;">SSH</span></td>
+                    <td>Executa comandos arbitrários no HBase Shell (ex: <code>count</code>, <code>describe</code>, <code>truncate</code>, <code>status</code>).</td>
+                    <td><code>RawOutput</code> (String)<br><code>ExitCode</code> (Int32)<br><code>OutDataTable</code> (DataTable)</td>
+                </tr>
+                <tr>
+                    <td><span class="param-name">HBaseSshTunnelActivity</span></td>
+                    <td><span class="card-badge" style="background:#ECFDF5; color:#065F46;">SSH</span></td>
+                    <td>Abre um túnel SSH com encaminhamento de porta local (Port Forwarding) em segundo plano durante a execução do fluxo.</td>
+                    <td><code>TunnelActive</code> (Boolean)<br><code>AssignedLocalPort</code> (Int32)</td>
+                </tr>
+                <tr>
+                    <td><span class="param-name">HBaseGetRowActivity</span></td>
+                    <td><span class="card-badge" style="background:#EFF6FF; color:#1E40AF;">REST</span></td>
+                    <td>Busca um registro específico pela RowKey, decodificando valores Base64 para JSON e DataTable.</td>
+                    <td><code>Found</code> (Boolean)<br><code>OutDataTable</code> (DataTable)<br><code>OutJson</code> (String)</td>
+                </tr>
+                <tr>
+                    <td><span class="param-name">HBasePutRowActivity</span></td>
+                    <td><span class="card-badge" style="background:#EFF6FF; color:#1E40AF;">REST</span></td>
+                    <td>Cria ou atualiza células enviando payload codificado em Base64 via REST.</td>
+                    <td><code>StatusCode</code> (Int32)<br><code>IsSuccess</code> (Boolean)</td>
+                </tr>
+                <tr>
+                    <td><span class="param-name">HBaseScanActivity</span></td>
+                    <td><span class="card-badge" style="background:#EFF6FF; color:#1E40AF;">REST</span></td>
+                    <td>Cria um scanner REST para consultar faixas de registros com filtros de data ou prefixo.</td>
+                    <td><code>OutDataTable</code> (DataTable)<br><code>RowCount</code> (Int32)</td>
+                </tr>
+                <tr>
+                    <td><span class="param-name">HBaseDeleteActivity</span></td>
+                    <td><span class="card-badge" style="background:#EFF6FF; color:#1E40AF;">REST</span></td>
+                    <td>Exclui uma linha inteira, uma Column Family específica ou uma única célula.</td>
+                    <td><code>IsSuccess</code> (Boolean)</td>
+                </tr>
+                <tr>
+                    <td><span class="param-name">HBaseTableAdminActivity</span></td>
+                    <td><span class="card-badge" style="background:#EFF6FF; color:#1E40AF;">REST</span></td>
+                    <td>Verifica se uma tabela existe, recupera o schema em XML/JSON, cria ou faz o drop da tabela.</td>
+                    <td><code>TableExists</code> (Boolean)<br><code>ResultJson</code> (String)</td>
+                </tr>
+                <tr>
+                    <td><span class="param-name">HBaseClusterStatusActivity</span></td>
+                    <td><span class="card-badge" style="background:#EFF6FF; color:#1E40AF;">REST</span></td>
+                    <td>Ping no serviço e consulta de métricas de saúde e versão do cluster.</td>
+                    <td><code>ClusterJson</code> (String)<br><code>IsHealthy</code> (Boolean)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- SEÇÃO 3: REGRAS DE SCHEMA & BOAS PRÁTICAS -->
+    <div class="section-header">
+        <div class="section-num">3</div>
+        <div class="section-title">Regras Cruciais de Schema do HBase (Column Families)</div>
+    </div>
+    
+    <div class="callout warning">
+        <strong>Atenção à nomenclatura de colunas no HBase:</strong><br>
+        O Apache HBase exige que todas as colunas sejam prefixadas pela sua respectiva <strong>Column Family</strong> no formato <code>family:qualifier</code> (ex: <code>info:name</code>, <code>contact:email</code>). Se o prefixo for omitido ou se a Column Family informada não existir na tabela, o HBase rejeitará a mutação com erro de <code>NoSuchColumnFamilyException</code>.
+    </div>
+
+    <p>Exemplo de configuração correta no parâmetro <code>ColumnsJson</code> da atividade <strong>HBaseSshPutActivity</strong>:</p>
+
+    <pre><code>{
+  "info:name": "Carlos Silva",
+  "info:tier": "Platinum",
+  "contact:email": "carlos.silva@example.com",
+  "contact:phone": "+55 11 98888-7777"
+}</code></pre>
+
+    <!-- SEÇÃO 4: TRATAMENTO DE ERROS AMIGÁVEIS -->
+    <div class="section-header">
+        <div class="section-num">4</div>
+        <div class="section-title">Mensagens de Erro Formatadas e Amigáveis</div>
+    </div>
+    <p>
+        O HBase Shell normalmente retorna longos stack traces internos de Java (com mais de 50 linhas de chamadas RPC e Netty). 
+        Esta extensão possui o componente integrado <strong><code>HBaseErrorMessageFormatter</code></strong>, que intercepta e traduz automaticamente essas falhas em alertas claros e acionáveis diretamente no modal do Javelin:
+    </p>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 25%;">Exceção Interna Java</th>
+                    <th style="width: 75%;">Mensagem Formatada no Javelin</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>NoSuchColumnFamilyException</code></td>
+                    <td>
+                        <code>A Column Family '&lt;cf&gt;' não existe na tabela '&lt;tabela&gt;'.</code><br>
+                        <code>Column families existentes: ['contact', 'info'].</code><br>
+                        <code>Verifique o prefixo 'familia:coluna' informado no Javelin.</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>TableNotFoundException</code></td>
+                    <td>
+                        <code>A tabela '&lt;tabela&gt;' não foi encontrada no cluster HBase.</code><br>
+                        <code>Verifique se o nome ou namespace estão corretos.</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>TableNotEnabledException</code></td>
+                    <td>
+                        <code>A tabela '&lt;tabela&gt;' está desabilitada (DISABLED).</code><br>
+                        <code>Habilite-a com: enable '&lt;tabela&gt;'.</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>hbase: not found</code></td>
+                    <td>
+                        <code>O comando 'hbase' não foi encontrado no PATH do servidor SSH.</code><br>
+                        <code>Configure a propriedade 'HBaseBinPath' com o caminho completo (ex: /usr/bin/hbase).</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>GSSException / Ticket expired</code></td>
+                    <td>
+                        <code>Falha de autenticação Kerberos: [detalhes do ticket].</code><br>
+                        <code>Verifique KinitPrincipal e KinitKeytabPath.</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>ZooKeeperConnectionException</code></td>
+                    <td>
+                        <code>Não foi possível conectar ao HBase Master / Zookeeper.</code><br>
+                        <code>Verifique se os serviços do cluster estão ativos e acessíveis.</code>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- SEÇÃO 5: GUIA DE INSTALAÇÃO NO JAVELIN -->
+    <div class="section-header">
+        <div class="section-num">5</div>
+        <div class="section-title">Guia de Instalação no Javelin Designer</div>
+    </div>
+    
+    <ol style="padding-left: 20px; color: var(--bcom-slate); font-size: 13px; line-height: 1.8;">
+        <li>
+            <strong>Fechar o Javelin:</strong> Certifique-se de que o aplicativo Javelin Designer não esteja aberto.
+        </li>
+        <li>
+            <strong>Criar a pasta Extensions no Javelin:</strong><br>
+            Acesse o diretório raiz onde o Javelin está instalado e crie uma subpasta chamada <code>Extensions</code>. Por exemplo:
+            <pre><code>F:\Program Files\Grid-Tools\Javelin\Extensions\</code></pre>
+            <span style="font-size: 11.5px; color: var(--bcom-slate);">(ou <code>C:\Program Files\Grid-Tools\Javelin\Extensions\</code>, dependendo da unidade de instalação)</span>
+        </li>
+        <li>
+            <strong>Copiar as DLLs para a pasta Extensions criada:</strong><br>
+            Copie os arquivos da pasta <code>dist/</code> para dentro de <code>F:\Program Files\Grid-Tools\Javelin\Extensions\</code>:
+            <ul style="margin: 6px 0 10px 18px;">
+                <li><code>GridTools.Javelin.HBaseActivities.dll</code></li>
+                <li><code>Newtonsoft.Json.dll</code></li>
+                <li><code>Renci.SshNet.dll</code> <em>(versão 2020.0.1 incluída no pacote)</em></li>
+            </ul>
+        </li>
+        <li>
+            <strong>Desbloquear Arquivos (PowerShell):</strong> Caso os arquivos tenham sido baixados ou copiados pela rede, execute no PowerShell como Administrador para remover bloqueios do Windows:
+            <pre><code>dir "F:\Program Files\Grid-Tools\Javelin\Extensions\*HBase*" | Unblock-File
+dir "F:\Program Files\Grid-Tools\Javelin\Extensions\*.dll" | Unblock-File</code></pre>
+        </li>
+        <li>
+            <strong>Registrar a Extensão no Javelin Designer:</strong>
+            <ul style="margin: 6px 0 10px 18px;">
+                <li>Abra o <strong>Javelin Designer</strong>.</li>
+                <li>No menu superior, acesse <strong>File &rarr; Options &rarr; Extensions</strong> (ou clique no botão <strong>Import Extension</strong>).</li>
+                <li>Clique em <strong>Add / Import</strong> e aponte para:
+                    <br><code>F:\Program Files\Grid-Tools\Javelin\Extensions\GridTools.Javelin.HBaseActivities.dll</code>
+                </li>
+                <li>Defina o nome da categoria como <strong>HBase Activities</strong> e confirme.</li>
+            </ul>
+        </li>
+        <li>
+            <strong>Pronto!</strong> A categoria <em>HBase Activities</em> estará imediatamente disponível na <strong>Toolbox</strong> lateral do Javelin, pronta para uso em novos fluxos ou fluxos existentes.
+        </li>
+    </ol>
+
+    <!-- SEÇÃO 6: EXEMPLOS PRÁTICOS -->
+    <div class="section-header">
+        <div class="section-num">6</div>
+        <div class="section-title">Exemplos Práticos (.vwf)</div>
+    </div>
+    <p>O pacote inclui dois fluxos Javelin prontos para teste na pasta <code>dist/examples/</code>:</p>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-header">
+                <span>HBase_SSH_Examples.vwf</span>
+                <span class="card-badge">SSH Edge Node</span>
+            </div>
+            <p style="font-size: 12px; color: var(--bcom-slate); margin-bottom: 8px;">
+                Demonstra o ciclo completo sem precisar de REST Server instalado:
+            </p>
+            <ol style="padding-left: 16px; font-size: 12px; color: var(--bcom-slate); line-height: 1.5;">
+                <li><strong>HBaseSshPutActivity:</strong> Insere dados na tabela com chaves estruturadas.</li>
+                <li><strong>HBaseSshScanActivity:</strong> Realiza scan com StartRow e StopRow e converte para DataTable.</li>
+                <li><strong>LogActivity:</strong> Imprime o JSON retornado no console de execução.</li>
+            </ol>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <span>HBase_Examples.vwf</span>
+                <span class="card-badge">REST API</span>
+            </div>
+            <p style="font-size: 12px; color: var(--bcom-slate); margin-bottom: 8px;">
+                Demonstra integração de alta performance via REST:
+            </p>
+            <ol style="padding-left: 16px; font-size: 12px; color: var(--bcom-slate); line-height: 1.5;">
+                <li><strong>HBaseClusterStatusActivity:</strong> Checa a saúde e versão do cluster.</li>
+                <li><strong>HBaseGetRowActivity:</strong> Faz busca pontual por chave decodificando Base64.</li>
+                <li><strong>HBaseScanActivity:</strong> Lê múltiplos registros via scanner REST.</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div>&copy; 2026 Broadcom. Todos os direitos reservados. CA Test Data Manager &trade;</div>
+        <div>DOCUMENTO DE INTEGRAÇÃO CUSTOMIZADA &mdash; JAVELIN EXTENSION</div>
+    </div>
+</div>
+</body>
+</html>

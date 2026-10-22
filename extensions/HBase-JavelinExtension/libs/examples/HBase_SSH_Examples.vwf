@@ -1,0 +1,84 @@
+<Flowchart mc:Ignorable="sap sap2010 sads" mva:VisualBasic.Settings="{x:Null}" sap2010:WorkflowViewState.IdRef="Flowchart_SSH_1"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:av="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:gjc="clr-namespace:GridTools.Javelin.Common;assembly=GridTools.Javelin.Common"
+ xmlns:gjd="clr-namespace:GridTools.Javelin.Designer;assembly=Javelin"
+ xmlns:gjh="clr-namespace:GridTools.Javelin.HBaseActivities.Activities;assembly=GridTools.Javelin.HBaseActivities"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
+ xmlns:s="clr-namespace:System;assembly=mscorlib"
+ xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+ xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=mscorlib"
+ xmlns:sd="clr-namespace:System.Data;assembly=System.Data"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <TextExpression.Namespaces>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System.Activities</x:String>
+      <x:String>System.Activities.Statements</x:String>
+      <x:String>System.Activities.Expressions</x:String>
+      <x:String>System.Activities.Validation</x:String>
+      <x:String>System.Activities.XamlIntegration</x:String>
+      <x:String>GridTools.Javelin.Designer</x:String>
+      <x:String>GridTools.Javelin.HBaseActivities.Activities</x:String>
+      <x:String>Microsoft.VisualBasic.Activities</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Windows.Markup</x:String>
+    </sco:Collection>
+  </TextExpression.Namespaces>
+  <TextExpression.References>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>PresentationFramework</AssemblyReference>
+      <AssemblyReference>WindowsBase</AssemblyReference>
+      <AssemblyReference>PresentationCore</AssemblyReference>
+      <AssemblyReference>Javelin</AssemblyReference>
+      <AssemblyReference>GridTools.Javelin.HBaseActivities</AssemblyReference>
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Xml</AssemblyReference>
+      <AssemblyReference>System.Xaml</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.References>
+  <Flowchart.Variables>
+    <Variable x:TypeArguments="sd:DataTable" Name="dtScanResults" />
+    <Variable x:TypeArguments="x:String" Name="jsonScanResults" />
+    <Variable x:TypeArguments="x:Int32" Name="rowsRetrieved" />
+    <Variable x:TypeArguments="x:Boolean" Name="isSuccess" />
+  </Flowchart.Variables>
+  <Flowchart.StartNode>
+    <x:Reference>__ReferenceSSH0</x:Reference>
+  </Flowchart.StartNode>
+  <!-- Step 1: Put Row via SSH Shell -->
+  <FlowStep x:Name="__ReferenceSSH0">
+    <gjd:JGuid.JGuid>
+      <s:Guid>c1111111-2222-3333-4444-555555555551</s:Guid>
+    </gjd:JGuid.JGuid>
+    <gjh:HBaseSshPutActivity Host="hbase-edge-node01" Port="22" Username="hbase" Password="{x:Null}" PrivateKeyPath="C:\keys\id_rsa" Passphrase="{x:Null}" TableName="customers" RowKey="cust_2001" ColumnsJson="{}{'info:name': 'Carlos Silva', 'info:tier': 'Platinum', 'contact:email': 'carlos@example.com'}" InputDataTable="{x:Null}" HBaseBinPath="hbase" KinitPrincipal="{x:Null}" KinitKeytabPath="{x:Null}" TimeoutSeconds="120" IsSuccess="[isSuccess]" sap2010:WorkflowViewState.IdRef="HBaseSshPutActivity_1" />
+    <FlowStep.Next>
+      <!-- Step 2: Scan Rows via SSH Shell and parse into DataTable -->
+      <FlowStep x:Name="__ReferenceSSH1">
+        <gjd:JGuid.JGuid>
+          <s:Guid>c1111111-2222-3333-4444-555555555552</s:Guid>
+        </gjd:JGuid.JGuid>
+        <gjh:HBaseSshScanActivity Host="hbase-edge-node01" Port="22" Username="hbase" Password="{x:Null}" PrivateKeyPath="C:\keys\id_rsa" Passphrase="{x:Null}" TableName="customers" StartRow="cust_2000" StopRow="cust_2999" Columns="info:name,info:tier,contact:email" Limit="[50]" FilterString="{x:Null}" HBaseBinPath="hbase" KinitPrincipal="{x:Null}" KinitKeytabPath="{x:Null}" TimeoutSeconds="180" OutDataTable="[dtScanResults]" OutJson="[jsonScanResults]" RowCount="[rowsRetrieved]" IsSuccess="[isSuccess]" sap2010:WorkflowViewState.IdRef="HBaseSshScanActivity_1" />
+        <FlowStep.Next>
+          <!-- Step 3: Log retrieved results -->
+          <FlowStep x:Name="__ReferenceSSH2">
+            <gjd:JGuid.JGuid>
+              <s:Guid>c1111111-2222-3333-4444-555555555553</s:Guid>
+            </gjd:JGuid.JGuid>
+            <gjc:LogActivity ContinueOnError="{x:Null}" Timeout="{x:Null}" MessageToLog="['Retrieved ' &amp; rowsRetrieved.ToString() &amp; ' rows from HBase via SSH: ' &amp; jsonScanResults]" sap2010:WorkflowViewState.IdRef="LogActivity_2" />
+          </FlowStep>
+        </FlowStep.Next>
+      </FlowStep>
+    </FlowStep.Next>
+  </FlowStep>
+  <x:Reference>__ReferenceSSH1</x:Reference>
+  <x:Reference>__ReferenceSSH2</x:Reference>
+</Flowchart>

@@ -1,48 +1,62 @@
-# MongoDB Custom Extension for CA TDM Javelin
+# Broadcom Javelin Extensions Suite
 
-Custom activities library for **Broadcom / CA Test Data Manager (TDM) Javelin** to connect, query, insert, update, delete, aggregate, and run administrative commands on **MongoDB**.
-
-## Activities Included
-
-| Activity | Description | Key Inputs | Key Outputs |
-|---|---|---|---|
-| `MongoDB Find` (`MongoFindActivity`) | Query documents with filter, sort, projection, limit, and skip | `ConnectionString`, `DatabaseName`, `CollectionName`, `FilterJson`, `ProjectionJson`, `SortJson`, `Limit`, `Skip` | `OutJson` (string), `OutDataTable` (DataTable), `OutCount` (long) |
-| `MongoDB Insert` (`MongoInsertActivity`) | Insert single document, array of documents, or rows from a Javelin `DataTable` | `ConnectionString`, `DatabaseName`, `CollectionName`, `DocumentJson` or `InputDataTable` | `InsertedCount` (int), `InsertedIdsJson` (string) |
-| `MongoDB Update` (`MongoUpdateActivity`) | Update documents matching a filter (with `$set`, etc.) and optional upsert/updateMany | `ConnectionString`, `DatabaseName`, `CollectionName`, `FilterJson`, `UpdateJson`, `IsUpdateMany`, `IsUpsert` | `MatchedCount` (long), `ModifiedCount` (long), `UpsertedId` (string) |
-| `MongoDB Delete` (`MongoDeleteActivity`) | Delete single or multiple documents matching a filter | `ConnectionString`, `DatabaseName`, `CollectionName`, `FilterJson`, `IsDeleteMany` | `DeletedCount` (long) |
-| `MongoDB Aggregate` (`MongoAggregateActivity`) | Execute aggregation pipelines (`$match`, `$group`, `$sort`, etc.) | `ConnectionString`, `DatabaseName`, `CollectionName`, `PipelineJson` | `OutJson` (string), `OutDataTable` (DataTable), `OutCount` (long) |
-| `MongoDB Execute Command` (`MongoExecuteCommandActivity`) | Run administrative or raw commands (e.g., `ping`, `dropDatabase`, `stats`) | `ConnectionString`, `DatabaseName`, `CommandJson` | `ResponseJson` (string), `IsOk` (bool) |
+Enterprise Custom Activities for **Broadcom Test Data Manager (TDM)** & **Javelin**, enabling zero-leakage in-flight data masking migration, automatic Data Assistant tag template enforcement, encrypted memory-first secure vaults, and automated NoSQL Data Generator publishing across non-relational and modern data platforms.
 
 ---
 
-## Build Instructions
+## 📦 Extensions Included in this Suite
 
-1. Open `MongoDB-JavelinExtension.csproj` in Visual Studio or build using MSBuild:
-   ```cmd
-   nuget restore packages.config -PackagesDirectory ..\packages
-   msbuild MongoDB-JavelinExtension.csproj /p:Configuration=Release /p:Platform=x64
+| Database / Data Platform | Javelin Activity | Binary DLL / Package |
+|---|---|---|
+| **MongoDB / Cosmos DB / DocumentDB** | `MongoProdToNonProdPipelineActivity` | `dist/MongoDB Javelin Extension.zip` |
+| **Apache Cassandra / ScyllaDB** | `CassandraProdToNonProdPipelineActivity` | `dist/Cassandra Javelin Extension.zip` |
+| **Google Cloud BigQuery** | `BigQueryProdToNonProdPipelineActivity` | `dist/BigQuery Javelin Extension.zip` |
+| **Amazon DynamoDB / AWS KV Stores** | `DynamoDbProdToNonProdPipelineActivity` | `dist/DynamoDb Javelin Extension.zip` |
+| **NoSQL Files (JSON / NDJSON / Parquet)** | `NoSqlFileProdToNonProdPipelineActivity` | `dist/NoSqlFile Javelin Extension.zip` |
+| **Apache HBase / Hadoop Big Data** | `HBaseProdToNonProdPipelineActivity` | `dist/HBASE Javelin Extension.zip` |
+| **Mainframe / Broadcom Zowe** | `ZoweActivities` | `dist/Zowe Javelin Extension.zip` |
+
+---
+
+## 🔒 4-Barrier In-Flight Security Architecture
+
+Every activity adheres strictly to zero-leakage security:
+
+1. **Restricted NTFS ACL Isolation**: Disables inheritance and grants exclusive Full Control solely to the executing process identity.
+2. **OS / Windows EFS Encryption**: Encrypts the transient vault directory (`cipher /e` + AES-256).
+3. **Primary RAM Buffering**: Sets `FILE_ATTRIBUTE_TEMPORARY` so sensitive records reside in physical memory without premature disk flushes.
+4. **Forensic Zero-Fill Shredding**: Byte-by-byte overwriting with `0x00` and hardware `fsync` before deletion.
+
+---
+
+## ⚡ Core Features
+
+- **TDM Connection Profile Auto-Resolution**: Resolves profiles by name (e.g. `MONGO_PROD_CLUSTER`) via TDM Portal REST API with AES / GT-Crypt password decryption.
+- **Fail-Closed Tag Template Enforcement**: Queries `/TDMGeneratorService/api/ca/v1/data-assistant/templates` and aborts immediately if required masking rules are missing.
+- **Official MetaFunctions Parity**: Allocates a memory-based ContextGenerator session (`/TestDataManager/api/ca/v1/tdod/contextGenerators`) for native Data Painter evaluation.
+- **TDM NoSQL Generator Publishing**:
+  - `Formulas`: Generates autonomous Data Painter expressions (`@seedlist(...)@`, `@dob(...)@`, `@randguid()@`, `@randhex(12,12)@`).
+  - `ReplayMaskedData`: Persists exact masked values for rapid environment reset.
+- **Ready-to-Use Verification Queries**: Outputs formatted shell and SQL queries in logs for instant QA auditing in target environments.
+
+---
+
+## 📖 Interactive Documentation
+
+Open `Broadcom_TDM_NoSQL_Extensions_Suite_Guide.html` in any web browser for the full bilingual (PT-BR / EN) visual guide and interactive parameter reference.
+
+---
+
+## 🚀 Installation into Javelin Studio
+
+1. Unzip the desired extension ZIP bundle from `dist/`.
+2. Copy all `.dll` files to Javelin's extensions folder:
+   ```text
+   C:\Program Files (x86)\Grid-Tools\Javelin\Extensions\
    ```
-
-2. The output folder `bin\Release\` (or `bin\Debug\`) will contain:
-   - `GridTools.Javelin.MongoDbActivities.dll`
-   - `MongoDB.Driver.dll`
-   - `MongoDB.Driver.Core.dll`
-   - `MongoDB.Bson.dll`
-   - `DnsClient.dll`
+3. Restart **Javelin Studio**. The activities will appear in your Toolbox under their respective categories.
 
 ---
 
-## Installation into Javelin
-
-### Method 1: Via Javelin GUI
-1. Open **Javelin**.
-2. Go to **File → Options → Extensions** (or **Import Extension**).
-3. Click **Browse** and select `GridTools.Javelin.MongoDbActivities.dll`.
-4. Check the activities to import and assign the category name `MongoDB Activities`.
-5. Click **Import Selected**.
-
-### Method 2: Manual Registration (`extensions.xml`)
-1. Copy the output DLLs into the Javelin extensions folder:
-   - `C:\ProgramData\CA\JavelinConfig\x64\Extensions\`
-2. Edit `C:\ProgramData\CA\JavelinConfig\x64\Extensions\extensions.xml` and add the content from `extensions.xml`.
-3. Restart Javelin. The activities will appear in the toolbox under **MongoDB Activities**.
+### License
+Copyright © 2026 Broadcom Inc. All Rights Reserved.

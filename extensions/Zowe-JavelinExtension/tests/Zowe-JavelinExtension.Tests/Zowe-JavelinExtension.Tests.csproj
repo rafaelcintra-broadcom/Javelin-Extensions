@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+    <PackageReference Include="xunit" Version="2.7.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.7">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Compile the Helper & Model files directly for testing -->
+    <Compile Include="..\..\Models\ZoweModels.cs" Link="Models\ZoweModels.cs" />
+    <Compile Include="..\..\Models\TdmMainframeMaskingTemplate.cs" Link="Models\TdmMainframeMaskingTemplate.cs" />
+    <Compile Include="..\..\Helpers\ZoweCliHelper.cs" Link="Helpers\ZoweCliHelper.cs" />
+    <Compile Include="..\..\Helpers\ZoweOutputParser.cs" Link="Helpers\ZoweOutputParser.cs" />
+    <Compile Include="..\..\Helpers\ZoweErrorMessageFormatter.cs" Link="Helpers\ZoweErrorMessageFormatter.cs" />
+  </ItemGroup>
+
+</Project>

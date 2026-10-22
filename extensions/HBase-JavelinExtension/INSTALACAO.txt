@@ -1,0 +1,46 @@
+# Instalação da Extensão Apache HBase no Broadcom TDM Javelin (REST + SSH)
+
+Esta extensão oferece suporte híbrido completo para HBase:
+- Modo 1: REST API (Stargate / Knox)
+- Modo 2: SSH Direto / Bastion / Edge Node (execução de comandos nativos do `hbase shell`)
+- Modo 3: Túnel SSH Dinâmico (Local Port Forwarding em background para clusters fechados)
+
+## Instalação no Javelin Designer:
+
+1. Copie o conteúdo compilado de `bin\Release\` para a pasta de extensões do Javelin no Windows:
+   - `C:\ProgramData\CA\JavelinConfig\x64\Extensions\` (ou `C:\Program Files (x86)\Grid-Tools\Javelin\Extensions\`)
+
+Arquivos essenciais:
+   - `GridTools.Javelin.HBaseActivities.dll`
+   - `Renci.SshNet.dll`
+   - `BouncyCastle.Cryptography.dll`
+   - `Newtonsoft.Json.dll`
+
+2. Se os arquivos foram baixados ou transferidos pela rede, desbloqueie no PowerShell (Admin):
+   `Unblock-File "C:\ProgramData\CA\JavelinConfig\x64\Extensions\GridTools.Javelin.HBaseActivities.dll"`
+
+3. No Javelin Designer:
+   - Vá em **File** -> **Options** -> **Extensions** (ou clique no botão **Import Extension**)
+   - Selecione `GridTools.Javelin.HBaseActivities.dll`
+   - O Javelin detectará as 10 atividades:
+
+     ### Atividades via SSH (Sem necessidade de REST Server / Stargate):
+     * `HBaseSshShellActivity` (HBase SSH Shell Command) - Executa qualquer comando HBase (`get`, `scan`, `count`, `describe`, `status`)
+     * `HBaseSshScanActivity` (HBase SSH Scan) - Faz varredura por start/stop keys com filtros e popula um `DataTable`
+     * `HBaseSshPutActivity` (HBase SSH Put) - Insere dados a partir de JSON ou de um `DataTable` do Javelin
+     * `HBaseSshTunnelActivity` (HBase SSH Tunnel) - Abre um túnel SSH local transparente (ex: 18080 -> cluster:8080)
+
+     ### Atividades via REST API (Stargate / Apache Knox):
+     * `HBaseGetRowActivity` (HBase Get Row)
+     * `HBasePutRowActivity` (HBase Put Row)
+     * `HBaseScanActivity` (HBase Scan)
+     * `HBaseDeleteActivity` (HBase Delete)
+     * `HBaseTableAdminActivity` (HBase Table Admin)
+     * `HBaseClusterStatusActivity` (HBase Cluster Status)
+
+   - Nomeie a categoria: `HBase Activities`
+   - Clique em **Import Selected**
+
+4. Exemplos inclusos:
+   - `libs/examples/HBase_Examples.vwf` (Modo REST)
+   - `libs/examples/HBase_SSH_Examples.vwf` (Modo SSH Direto)

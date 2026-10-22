@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broadcom TDM — NoSQL & Modern Data Extensions Suite for Javelin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-secondary: #111827;
+            --bg-card: #1a2234;
+            --bg-card-hover: #212c42;
+            --border-color: #2a364f;
+            --border-accent: #cc0000;
+            --broadcom-red: #cc0000;
+            --broadcom-red-light: #e63946;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-amber: #f59e0b;
+            --code-bg: #0d131f;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding-bottom: 60px;
+        }
+
+        header {
+            background: linear-gradient(180deg, #161f30 0%, #0b0f19 100%);
+            border-bottom: 1px solid var(--border-color);
+            padding: 40px 20px 30px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .broadcom-logo-badge {
+            background-color: var(--broadcom-red);
+            color: white;
+            font-weight: 800;
+            font-size: 1.1rem;
+            padding: 6px 14px;
+            border-radius: 6px;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 12px rgba(204, 0, 0, 0.4);
+        }
+
+        .title-group h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .title-group p {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+        }
+
+        .lang-switch {
+            display: flex;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 30px;
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .lang-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .lang-btn.active {
+            background-color: var(--broadcom-red);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(204, 0, 0, 0.5);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto 0;
+            padding: 0 20px;
+        }
+
+        /* Pillars Section */
+        .hero-banner {
+            background: linear-gradient(135deg, rgba(204,0,0,0.1) 0%, rgba(59,130,246,0.05) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--broadcom-red);
+        }
+
+        .hero-banner h2 {
+            font-size: 1.4rem;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+
+        .hero-banner p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            max-width: 900px;
+        }
+
+        .pillars-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            margin-bottom: 45px;
+        }
+
+        .pillar-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 22px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .pillar-card:hover {
+            transform: translateY(-3px);
+            border-color: #3b82f6;
+        }
+
+        .pillar-icon {
+            font-size: 1.8rem;
+            margin-bottom: 12px;
+            display: inline-block;
+        }
+
+        .pillar-card h3 {
+            font-size: 1.05rem;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .pillar-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Section Titles */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 40px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-header h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .badge-count {
+            background-color: var(--border-color);
+            color: #60a5fa;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        /* Extensions List & Grid */
+        .extension-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 24px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            transition: border-color 0.2s;
+        }
+
+        .extension-card:hover {
+            border-color: #4b5563;
+        }
+
+        .card-header {
+            background-color: var(--bg-secondary);
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .card-title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .db-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .icon-mongo { background: #13aa52; color: white; }
+        .icon-cassandra { background: #1488c8; color: white; }
+        .icon-bigquery { background: #4285f4; color: white; }
+        .icon-dynamo { background: #4053d6; color: white; }
+        .icon-file { background: #f59e0b; color: white; }
+        .icon-hbase { background: #d9381e; color: white; }
+
+        .card-title-group h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .activity-name {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: #60a5fa;
+            background: rgba(59, 130, 246, 0.1);
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .download-pill {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        .card-desc {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .props-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .props-card {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .props-card h4 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #93c5fd;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .props-list {
+            list-style: none;
+            font-size: 0.85rem;
+        }
+
+        .props-list li {
+            padding: 4px 0;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .props-list li:last-child {
+            border-bottom: none;
+        }
+
+        .prop-name {
+            font-family: 'Fira Code', monospace;
+            color: #e5e7eb;
+            font-weight: 500;
+        }
+
+        .prop-type {
+            color: var(--text-muted);
+            font-size: 0.78rem;
+        }
+
+        /* Verification Query Block */
+        .code-box {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-top: 15px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.82rem;
+            color: #a7f3d0;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        /* Architecture Visual Flow */
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 24px;
+            margin: 25px 0;
+            overflow-x: auto;
+            gap: 15px;
+        }
+
+        .flow-step {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            min-width: 170px;
+            flex: 1;
+            position: relative;
+        }
+
+        .flow-step.highlight {
+            border-color: var(--broadcom-red);
+            box-shadow: 0 0 15px rgba(204, 0, 0, 0.2);
+        }
+
+        .flow-step .step-num {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #60a5fa;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .flow-step .step-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .flow-step .step-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .flow-arrow {
+            color: #4b5563;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        /* Installation Section */
+        .install-steps {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 26px;
+            margin-top: 30px;
+        }
+
+        .install-steps ol {
+            padding-left: 20px;
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+        }
+
+        .install-steps li {
+            margin-bottom: 12px;
+        }
+
+        .install-steps code {
+            font-family: 'Fira Code', monospace;
+            background: var(--code-bg);
+            color: #fbbf24;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 25px;
+        }
+
+        /* Language Toggle Content Management */
+        [data-lang="en"] {
+            display: none;
+        }
+
+        body.lang-en [data-lang="pt"] {
+            display: none;
+        }
+
+        body.lang-en [data-lang="en"] {
+            display: block;
+        }
+
+        body.lang-en span[data-lang="en"],
+        body.lang-en strong[data-lang="en"],
+        body.lang-en code[data-lang="en"],
+        body.lang-en a[data-lang="en"] {
+            display: inline;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-container">
+            <div class="brand-container">
+                <div class="broadcom-logo-badge">BROADCOM</div>
+                <div class="title-group">
+                    <h1>Enterprise NoSQL Extensions Suite for Javelin</h1>
+                    <p data-lang="pt">Test Data Manager (TDM) — Pacote Oficial de Extensões NoSQL com Zero-Leakage & Publicação de Geradores</p>
+                    <p data-lang="en">Test Data Manager (TDM) — Official NoSQL Extensions Suite with Zero-Leakage & Generator Publishing</p>
+                </div>
+            </div>
+            <div class="lang-switch">
+                <button class="lang-btn active" id="btn-pt" onclick="setLanguage('pt')">🇧🇷 Português</button>
+                <button class="lang-btn" id="btn-en" onclick="setLanguage('en')">🇺🇸 English</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- Hero Section -->
+        <div class="hero-banner">
+            <h2 data-lang="pt">Arquitetura Unificada de Migração e Mascaramento In-Flight</h2>
+            <h2 data-lang="en">Unified In-Flight Migration & Masking Architecture</h2>
+            <p data-lang="pt">
+                Este pacote estende o Broadcom Javelin com atividades nativas para extração segura, mascaramento rigoroso baseado em Tag Templates do TDM Portal, cofre isolado de 4 barreiras e publicação automática de NoSQL Data Generators em todos os bancos não-relacionais suportados.
+            </p>
+            <p data-lang="en">
+                This suite extends Broadcom Javelin with native activities for secure extraction, strict masking based on TDM Portal Tag Templates, a 4-barrier isolated vault, and automatic NoSQL Data Generator publishing across all supported non-relational engines.
+            </p>
+        </div>
+
+        <!-- 4 Security Barriers Grid -->
+        <div class="pillars-grid">
+            <div class="pillar-card">
+                <div class="pillar-icon">🔒</div>
+                <h3 data-lang="pt">1. ACL NTFS Restrita</h3>
+                <h3 data-lang="en">1. Restricted NTFS ACL</h3>
+                <p data-lang="pt">Desativa herança e bloqueia acesso de outros usuários no SO, concedendo controle total unicamente à conta do processo executor.</p>
+                <p data-lang="en">Disables inheritance and locks out other OS users, granting exclusive Full Control solely to the executing process identity.</p>
+            </div>
+            <div class="pillar-card">
+                <div class="pillar-icon">🛡️</div>
+                <h3 data-lang="pt">2. Criptografia EFS / SO</h3>
+                <h3 data-lang="en">2. OS / EFS Encryption</h3>
+                <p data-lang="pt">Ativa criptografia transparente Windows EFS (<code>cipher /e</code>) e AES-256 no diretório transitório do cofre.</p>
+                <p data-lang="en">Activates transparent Windows EFS encryption (<code>cipher /e</code>) and AES-256 in the transient secure vault directory.</p>
+            </div>
+            <div class="pillar-card">
+                <div class="pillar-icon">⚡</div>
+                <h3 data-lang="pt">3. Buffer Primário em RAM</h3>
+                <h3 data-lang="en">3. Primary RAM Buffer</h3>
+                <p data-lang="pt">Aplica a flag <code>FILE_ATTRIBUTE_TEMPORARY</code> para priorizar a permanência de dados confidenciais na memória física sem flush em disco.</p>
+                <p data-lang="en">Applies the <code>FILE_ATTRIBUTE_TEMPORARY</code> flag to prioritize keeping sensitive data in physical RAM without unnecessary disk flushes.</p>
+            </div>
+            <div class="pillar-card">
+                <div class="pillar-icon">💥</div>
+                <h3 data-lang="pt">4. Destruição Forense 0x00</h3>
+                <h3 data-lang="en">4. Forensic 0x00 Shredding</h3>
+                <p data-lang="pt">Sobregravação byte a byte com zeros (Zero-Fill) e chamada síncrona <code>fsync</code> antes da exclusão física do arquivo.</p>
+                <p data-lang="en">Byte-by-byte Zero-Fill shredding (0x00) with synchronous hardware <code>fsync</code> before physical file deletion.</p>
+            </div>
+        </div>
+
+        <!-- Visual Flow Diagram -->
+        <div class="section-header">
+            <h2 data-lang="pt">Fluxo de Execução do Pipeline In-Flight</h2>
+            <h2 data-lang="en">In-Flight Pipeline Execution Flow</h2>
+        </div>
+
+        <div class="flow-diagram">
+            <div class="flow-step">
+                <div class="step-num">Step 1</div>
+                <div class="step-title" data-lang="pt">Profile Discovery</div>
+                <div class="step-title" data-lang="en">Profile Discovery</div>
+                <div class="step-desc" data-lang="pt">TDM Portal REST / GT-Crypt Decryption</div>
+                <div class="step-desc" data-lang="en">TDM Portal REST / GT-Crypt Decryption</div>
+            </div>
+            <div class="flow-arrow">➔</div>
+            <div class="flow-step">
+                <div class="step-num">Step 2</div>
+                <div class="step-title" data-lang="pt">Tag Validation</div>
+                <div class="step-title" data-lang="en">Tag Validation</div>
+                <div class="step-desc" data-lang="pt">Fail-Closed Data Assistant Check</div>
+                <div class="step-desc" data-lang="en">Fail-Closed Data Assistant Check</div>
+            </div>
+            <div class="flow-arrow">➔</div>
+            <div class="flow-step highlight">
+                <div class="step-num">Step 3</div>
+                <div class="step-title" data-lang="pt">Secure Vault</div>
+                <div class="step-title" data-lang="en">Secure Vault</div>
+                <div class="step-desc" data-lang="pt">Extract + In-Flight Masking (RAM/EFS)</div>
+                <div class="step-desc" data-lang="en">Extract + In-Flight Masking (RAM/EFS)</div>
+            </div>
+            <div class="flow-arrow">➔</div>
+            <div class="flow-step">
+                <div class="step-num">Step 4</div>
+                <div class="step-title" data-lang="pt">Target Load</div>
+                <div class="step-title" data-lang="en">Target Load</div>
+                <div class="step-desc" data-lang="pt">Bulk Ingestion to Non-Prod</div>
+                <div class="step-desc" data-lang="en">Bulk Ingestion to Non-Prod</div>
+            </div>
+            <div class="flow-arrow">➔</div>
+            <div class="flow-step">
+                <div class="step-num">Step 5</div>
+                <div class="step-title" data-lang="pt">Publish & Shred</div>
+                <div class="step-title" data-lang="en">Publish & Shred</div>
+                <div class="step-desc" data-lang="pt">Create TDM Generator & Zero-Fill</div>
+                <div class="step-desc" data-lang="en">Create TDM Generator & Zero-Fill</div>
+            </div>
+        </div>
+
+        <!-- Extensions Catalog Section -->
+        <div class="section-header">
+            <h2 data-lang="pt">Catálogo de Extensões NoSQL Disponíveis</h2>
+            <h2 data-lang="en">Available NoSQL Extensions Catalog</h2>
+            <span class="badge-count">6 Modules</span>
+        </div>
+
+        <!-- 1. MongoDB -->
+        <div class="extension-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <div class="db-icon icon-mongo">M</div>
+                    <div>
+                        <h3>MongoDB / AWS DocumentDB / Azure Cosmos DB</h3>
+                        <span class="activity-name">MongoProdToNonProdPipelineActivity</span>
+                    </div>
+                </div>
+                <div class="download-pill">📦 MongoDB Javelin Extension.zip</div>
+            </div>
+            <div class="card-body">
+                <p class="card-desc" data-lang="pt">
+                    Suporta migração de coleções inteiras com integridade referencial automática (resolução inteligente de coleções filhas via <code>$lookup</code>), mascaramento de subdocumentos/arrays aninhados e geração de ObjectId com <code>@randhex(12,12)@</code>.
+                </p>
+                <p class="card-desc" data-lang="en">
+                    Supports full collection migration with automatic referential integrity (smart child collection discovery via <code>$lookup</code>), nested subdocument/array masking, and ObjectId generation with <code>@randhex(12,12)@</code>.
+                </p>
+                <div class="props-grid">
+                    <div class="props-card">
+                        <h4 data-lang="pt">Propriedades Principais</h4>
+                        <h4 data-lang="en">Key Properties</h4>
+                        <ul class="props-list">
+                            <li><span class="prop-name">SourceConnectionString</span> <span class="prop-type">String / Profile</span></li>
+                            <li><span class="prop-name">SourceCollectionName</span> <span class="prop-type">String</span></li>
+                            <li><span class="prop-name">RelatedCollectionsMapping</span> <span class="prop-type">Auto / Custom</span></li>
+                            <li><span class="prop-name">CreateTdmNoSqlGenerator</span> <span class="prop-type">Boolean</span></li>
+                            <li><span class="prop-name">GeneratorMode</span> <span class="prop-type">Formulas | ReplayMaskedData</span></li>
+                        </ul>
+                    </div>
+                    <div class="props-card">
+                        <h4 data-lang="pt">Auditoria & Verificação Rápida</h4>
+                        <h4 data-lang="en">Audit & Quick Verification</h4>
+                        <span class="code-label" data-lang="pt">Comando Mongosh de Validação:</span>
+                        <span class="code-label" data-lang="en">Mongosh Validation Command:</span>
+                        <div class="code-box">use non_prod_db<br>db.clientes.find({}, {cpf:1, email:1, nome:1}).limit(10)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Cassandra -->
+        <div class="extension-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <div class="db-icon icon-cassandra">C</div>
+                    <div>
+                        <h3>Apache Cassandra / ScyllaDB / DataStax</h3>
+                        <span class="activity-name">CassandraProdToNonProdPipelineActivity</span>
+                    </div>
+                </div>
+                <div class="download-pill">📦 Cassandra Javelin Extension.zip</div>
+            </div>
+            <div class="card-body">
+                <p class="card-desc" data-lang="pt">
+                    Extração direta de tabelas e keyspaces Cassandra via CQL com mascaramento de tipos complexos (UDT, Sets, Lists, Maps), suporte a UUID/TimeUUID com <code>@randguid()@</code> e inserção em lotes de alto desempenho.
+                </p>
+                <p class="card-desc" data-lang="en">
+                    Direct CQL table and keyspace extraction with complex type masking (UDT, Sets, Lists, Maps), UUID/TimeUUID support with <code>@randguid()@</code>, and high-performance batch insertion.
+                </p>
+                <div class="props-grid">
+                    <div class="props-card">
+                        <h4 data-lang="pt">Propriedades Principais</h4>
+                        <h4 data-lang="en">Key Properties</h4>
+                        <ul class="props-list">
+                            <li><span class="prop-name">SourceConnectionString</span> <span class="prop-type">Host / Profile</span></li>
+                            <li><span class="prop-name">SourceKeyspaceName</span> <span class="prop-type">String</span></li>
+                            <li><span class="prop-name">SourceTableName</span> <span class="prop-type">String</span></li>
+                            <li><span class="prop-name">CreateTdmNoSqlGenerator</span> <span class="prop-type">Boolean</span></li>
+                            <li><span class="prop-name">GeneratorMode</span> <span class="prop-type">Formulas | ReplayMaskedData</span></li>
+                        </ul>
+                    </div>
+                    <div class="props-card">
+                        <h4 data-lang="pt">Auditoria & Verificação Rápida</h4>
+                        <h4 data-lang="en">Audit & Quick Verification</h4>
+                        <span class="code-label" data-lang="pt">Consulta CQL de Validação:</span>
+                        <span class="code-label" data-lang="en">CQL Validation Query:</span>
+                        <div class="code-box">SELECT customer_id, full_name, email, document_num<br>FROM nonprod_ks.customers LIMIT 10;</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. BigQuery -->
+        <div class="extension-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <div class="db-icon icon-bigquery">BQ</div>
+                    <div>
+                        <h3>Google Cloud BigQuery</h3>
+                        <span class="activity-name">BigQueryProdToNonProdPipelineActivity</span>
+                    </div>
+                </div>
+                <div class="download-pill">📦 BigQuery Javelin Extension.zip</div>
+            </div>
+            <div class="card-body">
+                <p class="card-desc" data-lang="pt">
+                    Integração com Google BigQuery datasets e tabelas. Suporta autenticação via Service Account JSON ou Profiles do TDM, mascaramento de registros aninhados (<code>STRUCT</code> / <code>RECORD</code> e <code>REPEATED</code>), e streaming insert.
+                </p>
+                <p class="card-desc" data-lang="en">
+                    Integration with Google BigQuery datasets and tables. Supports Service Account JSON or TDM Connection Profiles, nested record masking (<code>STRUCT</code> / <code>RECORD</code> and <code>REPEATED</code> arrays), and streaming insert.
+                </p>
+                <div class="props-grid">
+                    <div class="props-card">
+                        <h4 data-lang="pt">Propriedades Principais</h4>
+                        <h4 data-lang="en">Key Properties</h4>
+                        <ul class="props-list">
+                            <li><span class="prop-name">SourceProjectId</span> <span class="prop-type">String / Profile</span></li>
+                            <li><span class="prop-name">SourceDatasetId</span> <span class="prop-type">String</span></li>
+                            <li><span class="prop-name">SourceTableId</span> <span class="prop-type">String</span></li>
+                            <li><span class="prop-name">CreateTdmNoSqlGenerator</span> <span class="prop-type">Boolean</span></li>
+                            <li><span class="prop-name">GeneratorMode</span> <span class="prop-type">Formulas | ReplayMaskedData</span></li>
+                        </ul>
+                    </div>
+                    <div class="props-card">
+                        <h4 data-lang="pt">Auditoria & Verificação Rápida</h4>
+                        <h4 data-lang="en">Audit & Quick Verification</h4>
+                        <span class="code-label" data-lang="pt">Consulta SQL BigQuery:</span>
+                        <span class="code-label" data-lang="en">BigQuery SQL Query:</span>
+                        <div class="code-box">SELECT * FROM `gcp-nonprod.analytics.users_masked`<br>WHERE status = 'ACTIVE' LIMIT 20;</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. DynamoDB -->
+        <div class="extension-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <div class="db-icon icon-dynamo">D</div>
+                    <div>
+                        <h3>Amazon DynamoDB / AWS KV Stores</h3>
+                        <span class="activity-name">DynamoDbProdToNonProdPipelineActivity</span>
+                    </div>
+                </div>
+                <div class="download-pill">📦 DynamoDb Javelin Extension.zip</div>
+            </div>
+            <div class="card-body">
+                <p class="card-desc" data-lang="pt">
+                    Extração de tabelas DynamoDB com Scan/Query paginado, mascaramento profundo de atributos JSON e mapas aninhados, e carga otimizada via <code>BatchWriteItem</code> com suporte a chave de partição e classificação.
+                </p>
+                <p class="card-desc" data-lang="en">
+                    DynamoDB table extraction with paginated Scan/Query, deep masking of JSON attributes and nested maps, and optimized bulk load via <code>BatchWriteItem</code> preserving partition and sort keys.
+                </p>
+                <div class="props-grid">
+                    <div class="props-card">
+                        <h4 data-lang="pt">Propriedades Principais</h4>
+                        <h4 data-lang="en">Key Properties</h4>
+                        <ul class="props-list">
+                            <li><span class="prop-name">SourceRegionOrServiceUrl</span> <span class="prop-type">Region / Profile</span></li>
+                            <li><span class="prop-name">SourceTableName</span> <span class="prop-type">String</span></li>
+                            <li><span class="prop-name">BatchSize</span> <span class="prop-type">Int32 (default: 25)</span></li>
+                            <li><span class="prop-name">CreateTdmNoSqlGenerator</span> <span class="prop-type">Boolean</span></li>
+                            <li><span class="prop-name">GeneratorMode</span> <span class="prop-type">Formulas | ReplayMaskedData</span></li>
+                        </ul>
+                    </div>
+                    <div class="props-card">
+                        <h4 data-lang="pt">Auditoria & Verificação Rápida</h4>
+                        <h4 data-lang="en">Audit & Quick Verification</h4>
+                        <span class="code-label" data-lang="pt">Comando AWS CLI:</span>
+                        <span class="code-label" data-lang="en">AWS CLI Command:</span>
+                        <div class="code-box">aws dynamodb scan --table-name Orders_QA \<br>--projection-expression "orderId, customerName, total" --max-items 10</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. NoSQL Files -->
+        <div class="extension-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <div class="db-icon icon-file">F</div>
+                    <div>
+                        <h3>NoSQL Files (JSON / NDJSON / Parquet / S3 / Local)</h3>
+                        <span class="activity-name">NoSqlFileProdToNonProdPipelineActivity</span>
+                    </div>
+                </div>
+                <div class="download-pill">📦 NoSqlFile Javelin Extension.zip</div>
+            </div>
+            <div class="card-body">
+                <p class="card-desc" data-lang="pt">
+                    Processamento e higienização em lote de arquivos NoSQL (JSON Arrays, NDJSON / JSON Lines, Parquet) armazenados localmente ou em repositórios de dados, gerando arquivos anonimizados prontos para carga em ambientes de QA.
+                </p>
+                <p class="card-desc" data-lang="en">
+                    Batch processing and sanitization of NoSQL files (JSON Arrays, NDJSON / JSON Lines, Parquet) stored locally or in object stores, generating anonymized data files ready for QA consumption.
+                </p>
+                <div class="props-grid">
+                    <div class="props-card">
+                        <h4 data-lang="pt">Propriedades Principais</h4>
+                        <h4 data-lang="en">Key Properties</h4>
+                        <ul class="props-list">
+                            <li><span class="prop-name">SourcePath</span> <span class="prop-type">File / Folder Path</span></li>
+                            <li><span class="prop-name">SearchPattern</span> <span class="prop-type">*.json | *.ndjson</span></li>
+                            <li><span class="prop-name">TargetPath</span> <span class="prop-type">Destination Path</span></li>
+                            <li><span class="prop-name">CreateTdmNoSqlGenerator</span> <span class="prop-type">Boolean</span></li>
+                            <li><span class="prop-name">GeneratorMode</span> <span class="prop-type">Formulas | ReplayMaskedData</span></li>
+                        </ul>
+                    </div>
+                    <div class="props-card">
+                        <h4 data-lang="pt">Auditoria & Verificação Rápida</h4>
+                        <h4 data-lang="en">Audit & Quick Verification</h4>
+                        <span class="code-label" data-lang="pt">Validação com jq / Head:</span>
+                        <span class="code-label" data-lang="en">Validation with jq / Head:</span>
+                        <div class="code-box">jq '.[0:5] | .[] | {cpf: .cpf, nome: .nome}' \<br>/data/qa/Masked_NoSqlData.json</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. HBase -->
+        <div class="extension-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <div class="db-icon icon-hbase">H</div>
+                    <div>
+                        <h3>Apache HBase / Hadoop Big Data</h3>
+                        <span class="activity-name">HBaseProdToNonProdPipelineActivity</span>
+                    </div>
+                </div>
+                <div class="download-pill">📦 HBASE Javelin Extension.zip</div>
+            </div>
+            <div class="card-body">
+                <p class="card-desc" data-lang="pt">
+                    Extração e mascaramento de Column Families no HBase via SSH / REST / Gateway seguro, aplicando regras de Tag Templates nas colunas dinâmicas e reconstruindo a tabela de destino em Não-Produção.
+                </p>
+                <p class="card-desc" data-lang="en">
+                    Extraction and masking of HBase Column Families via SSH / REST / Secure Gateway, applying Tag Template rules across dynamic columns and loading into Non-Prod target tables.
+                </p>
+                <div class="props-grid">
+                    <div class="props-card">
+                        <h4 data-lang="pt">Propriedades Principais</h4>
+                        <h4 data-lang="en">Key Properties</h4>
+                        <ul class="props-list">
+                            <li><span class="prop-name">HBaseHost / ConnectionProfile</span> <span class="prop-type">String</span></li>
+                            <li><span class="prop-name">SourceTableName</span> <span class="prop-type">String</span></li>
+                            <li><span class="prop-name">DataAssistantTagTemplate</span> <span class="prop-type">String</span></li>
+                            <li><span class="prop-name">BatchSize</span> <span class="prop-type">Int32</span></li>
+                        </ul>
+                    </div>
+                    <div class="props-card">
+                        <h4 data-lang="pt">Auditoria & Verificação Rápida</h4>
+                        <h4 data-lang="en">Audit & Quick Verification</h4>
+                        <span class="code-label" data-lang="pt">Comando HBase Shell:</span>
+                        <span class="code-label" data-lang="en">HBase Shell Command:</span>
+                        <div class="code-box">hbase> scan 'customers_qa', {COLUMNS => ['pii:cpf', 'pii:email'], LIMIT => 10}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Installation & Usage Guide -->
+        <div class="section-header">
+            <h2 data-lang="pt">Guia de Instalação no Broadcom Javelin</h2>
+            <h2 data-lang="en">Installation Guide for Broadcom Javelin</h2>
+        </div>
+
+        <div class="install-steps">
+            <ol>
+                <li>
+                    <strong data-lang="pt">Descompacte o arquivo ZIP da extensão desejada:</strong>
+                    <strong data-lang="en">Unzip the desired extension package:</strong>
+                    <p data-lang="pt">Exemplo: Extraia <code>MongoDB Javelin Extension.zip</code> ou o pacote correspondente.</p>
+                    <p data-lang="en">Example: Extract <code>MongoDB Javelin Extension.zip</code> or the respective package.</p>
+                </li>
+                <li>
+                    <strong data-lang="pt">Copie as DLLs para a pasta de extensões do Javelin:</strong>
+                    <strong data-lang="en">Copy the DLL files to Javelin's Extensions directory:</strong>
+                    <p><code>C:\Program Files (x86)\Grid-Tools\Javelin\Extensions\</code> <span data-lang="pt">(ou na pasta raiz do executável Javelin.exe)</span><span data-lang="en">(or Javelin.exe root installation folder)</span></p>
+                </li>
+                <li>
+                    <strong data-lang="pt">Reinicie o Javelin Studio:</strong>
+                    <strong data-lang="en">Restart Javelin Studio:</strong>
+                    <p data-lang="pt">As atividades aparecerão automaticamente na paleta de ferramentas (Toolbox) nas categorias correspondentes.</p>
+                    <p data-lang="en">Activities will automatically appear in the Javelin Toolbox palette under their respective categories.</p>
+                </li>
+                <li>
+                    <strong data-lang="pt">Configure o Tag Template no TDM Portal:</strong>
+                    <strong data-lang="en">Configure Tag Template in TDM Portal:</strong>
+                    <p data-lang="pt">Crie ou vincule seu template (ex: <code>PII_DEFAULT</code>, <code>MONGODB_PII_TAG_TEMPLATE</code>) no Data Assistant do TDM Portal.</p>
+                    <p data-lang="en">Create or link your template (e.g. <code>PII_DEFAULT</code>, <code>MONGODB_PII_TAG_TEMPLATE</code>) in TDM Portal's Data Assistant.</p>
+                </li>
+            </ol>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>Copyright © 2026 Broadcom Inc. All Rights Reserved. Broadcom, the pulse logo, and Test Data Manager are trademarks of Broadcom.</p>
+    </footer>
+
+    <script>
+        function setLanguage(lang) {
+            document.getElementById('btn-pt').classList.remove('active');
+            document.getElementById('btn-en').classList.remove('active');
+
+            if (lang === 'en') {
+                document.body.classList.add('lang-en');
+                document.getElementById('btn-en').classList.add('active');
+                document.documentElement.lang = 'en';
+            } else {
+                document.body.classList.remove('lang-en');
+                document.getElementById('btn-pt').classList.add('active');
+                document.documentElement.lang = 'pt-BR';
+            }
+        }
+    </script>
+</body>
+</html>

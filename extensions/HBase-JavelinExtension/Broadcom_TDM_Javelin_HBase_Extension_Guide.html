@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broadcom TDM Javelin - Apache HBase Extension Guide</title>
+    <style>
+        :root {
+            --bcom-red: #CC092F;
+            --bcom-red-dark: #A60624;
+            --bcom-charcoal: #111827;
+            --bcom-slate: #4B5563;
+            --bcom-bg-neutral: #F8FAFC;
+            --bcom-border: #E5E7EB;
+            --bcom-code-bg: #1E293B;
+            --bcom-green: #059669;
+            --bcom-blue: #2563EB;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #F3F4F6;
+            color: var(--bcom-charcoal);
+            line-height: 1.5;
+            font-size: 13.5px;
+            padding: 24px;
+        }
+        .content-wrapper {
+            max-width: 1080px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid var(--bcom-border);
+            border-top: 5px solid var(--bcom-red);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 36px 44px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--bcom-border);
+            padding-bottom: 18px;
+            margin-bottom: 24px;
+        }
+        .broadcom-logo-svg { height: 32px; width: auto; margin-bottom: 8px; }
+        .doc-title { font-size: 22px; font-weight: 700; color: var(--bcom-charcoal); letter-spacing: -0.3px; }
+        .doc-subtitle { font-size: 12.5px; color: var(--bcom-slate); font-weight: 400; margin-top: 2px; }
+        .badge-tag {
+            background: #FEE2E2;
+            color: var(--bcom-red-dark);
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            background-color: var(--bcom-bg-neutral);
+            border: 1px solid var(--bcom-border);
+            border-left: 4px solid var(--bcom-red);
+            border-radius: 4px;
+            padding: 12px 18px;
+            margin-bottom: 28px;
+        }
+        .meta-item { display: flex; flex-direction: column; }
+        .meta-label { font-size: 10.5px; text-transform: uppercase; color: var(--bcom-slate); font-weight: 600; }
+        .meta-value { font-size: 13px; font-weight: 600; color: var(--bcom-charcoal); margin-top: 2px; }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 28px 0 14px 0;
+            padding-bottom: 6px;
+            border-bottom: 1.5px solid var(--bcom-border);
+        }
+        .section-num {
+            background: var(--bcom-red);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .section-title { font-size: 16px; font-weight: 700; color: var(--bcom-charcoal); }
+        .callout {
+            background-color: #EFF6FF;
+            border-left: 4px solid var(--bcom-blue);
+            border-radius: 4px;
+            padding: 12px 16px;
+            margin: 14px 0;
+            font-size: 12.5px;
+            color: #1E3A8A;
+        }
+        .callout.warning { background-color: #FFFBEB; border-left-color: #D97706; color: #92400E; }
+        .callout.success { background-color: #ECFDF5; border-left-color: var(--bcom-green); color: #065F46; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+        .card {
+            background: #ffffff;
+            border: 1px solid var(--bcom-border);
+            border-radius: 6px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .card-header {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--bcom-charcoal);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .card-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            background: #E5E7EB;
+            color: var(--bcom-charcoal);
+        }
+        .table-container {
+            margin: 14px 0;
+            border: 1px solid var(--bcom-border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left; }
+        thead { background-color: #F8FAFC; border-bottom: 1.5px solid var(--bcom-border); }
+        th { padding: 9px 12px; font-weight: 700; color: var(--bcom-charcoal); font-size: 11.5px; text-transform: uppercase; }
+        td { padding: 9px 12px; border-bottom: 1px solid var(--bcom-border); color: var(--bcom-slate); vertical-align: top; }
+        tr:nth-child(even) { background-color: #FAFAFA; }
+        .param-name { font-family: Consolas, monospace; color: var(--bcom-red-dark); font-weight: 600; font-size: 12px; }
+        .param-type { font-size: 11px; color: #6B7280; font-style: italic; }
+        pre {
+            background-color: var(--bcom-code-bg);
+            color: #E2E8F0;
+            padding: 12px 14px;
+            border-radius: 5px;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 8px 0 12px 0;
+            line-height: 1.45;
+        }
+        code {
+            font-family: Consolas, monospace;
+            background-color: #F1F5F9;
+            color: #B91C1C;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 11.5px;
+        }
+        pre code { background-color: transparent; color: inherit; padding: 0; }
+        .footer {
+            margin-top: 36px;
+            border-top: 1px solid var(--bcom-border);
+            padding-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            color: var(--bcom-slate);
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+<div class="content-wrapper">
+
+    <div class="header">
+        <div>
+            <div class="doc-title">CA Test Data Manager (TDM) — Javelin</div>
+            <div class="doc-subtitle">Apache HBase REST / Stargate Custom Extension Guide</div>
+        </div>
+        <div style="text-align: right;">
+            <div class="badge-tag">Custom Integration</div>
+            <div style="font-size: 11px; color: var(--bcom-slate); margin-top: 6px;">Target: .NET 4.6.1 / Javelin x64</div>
+        </div>
+    </div>
+
+    <div class="meta-banner">
+        <div class="meta-item">
+            <span class="meta-label">Product</span>
+            <span class="meta-value">Broadcom CA TDM Javelin</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Assembly</span>
+            <span class="meta-value">GridTools.Javelin.HBaseActivities.dll</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Interface</span>
+            <span class="meta-value">Dual Mode: SSH Shell + REST API</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Auth</span>
+            <span class="meta-value">SSH Key/Pass, Kerberos, Basic, Knox</span>
+        </div>
+    </div>
+
+    <div class="section-header">
+        <div class="section-num">1</div>
+        <div class="section-title">Overview & Architecture</div>
+    </div>
+    <p>
+        The <strong>GridTools.Javelin.HBaseActivities</strong> extension provides comprehensive Big Data connectivity between CA Test Data Manager (TDM) workflows and Apache HBase databases.
+        It supports two distinct operational modes:
+    </p>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-header">
+                <span>Mode 1: SSH Access (No REST API Required)</span>
+                <span class="card-badge" style="background:#ECFDF5; color:#065F46;">Zero Cluster Changes</span>
+            </div>
+            <ul style="padding-left: 18px; color: var(--bcom-slate); font-size: 12.5px;">
+                <li><strong>No REST daemon needed:</strong> Connects to an HBase client/edge machine via SSH and executes commands directly in <code>hbase shell -n</code>.</li>
+                <li><strong>Automatic Output Parsing:</strong> Automatically parses columnar cell outputs and row counts into clean JSON and ADO.NET DataTables.</li>
+                <li><strong>Kerberos / Keytab:</strong> Supports automated <code>kinit</code> execution prior to HBase command execution on secure clusters.</li>
+                <li><strong>Port Forwarding Tunnel:</strong> <code>HBaseSshTunnelActivity</code> can create a dynamic local tunnel if REST is only available on localhost/internal VPC.</li>
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <span>Mode 2: REST / Stargate API</span>
+                <span class="card-badge" style="background:#EFF6FF; color:#1E40AF;">Direct HTTP</span>
+            </div>
+            <ul style="padding-left: 18px; color: var(--bcom-slate); font-size: 12.5px;">
+                <li><strong>High Throughput:</strong> Direct HTTP/REST communication via Apache Knox Gateway or HBase REST daemon (port 8080).</li>
+                <li><strong>Full CRUD:</strong> Native endpoints for Get, Put, Scan, Delete, and Table Admin.</li>
+                <li><strong>Automatic Base64 Handling:</strong> Transparently handles HBase REST's mandatory Base64 encoding.</li>
+            </ul>
+        </div>
+    </div>
+        <div class="card">
+            <div class="card-header">
+                <span>Included Activities</span>
+                <span class="card-badge">Toolbox</span>
+            </div>
+            <ul style="padding-left: 18px; color: var(--bcom-slate); font-size: 12.5px;">
+                <li><code>HBase Get Row</code>: Fetch single rows by RowKey or column</li>
+                <li><code>HBase Put Row</code>: Insert/update rows from JSON or DataTable</li>
+                <li><code>HBase Scan</code>: Range scan with filters and limit</li>
+                <li><code>HBase Delete</code>: Delete rows, column families, or specific cells</li>
+                <li><code>HBase Table Admin</code>: Create tables, check existence, drop</li>
+                <li><code>HBase Cluster Status</code>: Ping and query cluster/version metrics</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section-header">
+        <div class="section-num">2</div>
+        <div class="section-title">Enabling HBase REST Server</div>
+    </div>
+    <p>To connect from Javelin, start the HBase REST daemon on your Hadoop/HBase cluster:</p>
+    <pre><code># Start HBase REST daemon (default port 8080)
+hbase rest start -p 8080 --infoport 8085
+
+# Optional: verify with curl
+curl -H "Accept: application/json" http://hbase-host:8080/version</code></pre>
+
+    <div class="section-header">
+        <div class="section-num">3</div>
+        <div class="section-title">Installation in Javelin Designer</div>
+    </div>
+    <ol style="padding-left: 20px; color: var(--bcom-slate); font-size: 12.5px; line-height: 1.8;">
+        <li>Copy <code>GridTools.Javelin.HBaseActivities.dll</code> and <code>Newtonsoft.Json.dll</code> to <code>C:\ProgramData\CA\JavelinConfig\x64\Extensions\</code>.</li>
+        <li>Unblock files if copied from network: <code>Unblock-File "C:\ProgramData\CA\JavelinConfig\x64\Extensions\GridTools.Javelin.HBaseActivities.dll"</code></li>
+        <li>In Javelin, navigate to <strong>File &rarr; Options &rarr; Extensions</strong> (or click <strong>Import Extension</strong>).</li>
+        <li>Select <code>GridTools.Javelin.HBaseActivities.dll</code>, assign Category <strong>HBase Activities</strong>, and click <strong>Import Selected</strong>.</li>
+    </ol>
+
+    <div class="footer">
+        <div>&copy; 2026 Broadcom. All rights reserved. CA Test Data Manager &trade;</div>
+        <div>CONFIDENTIAL &mdash; FOR CUSTOMER VALIDATION USE ONLY</div>
+    </div>
+</div>
+</body>
+</html>

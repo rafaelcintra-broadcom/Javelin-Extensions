@@ -1,6 +1,8 @@
 ## Visual Studio / .NET Build Artifacts
-bin/
-obj/
+[Bb]in/
+[Oo]bj/
+**/bin/
+**/obj/
 publish/
 *.user
 *.userosscache
@@ -19,3 +21,4 @@ Thumbs.db
 ## Vault temporary files
 *.bson.vault
 *.vault.tmp
+*.vault
