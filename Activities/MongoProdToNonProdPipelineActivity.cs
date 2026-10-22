@@ -8,6 +8,7 @@ using System.Text;
 using GridTools.Javelin.Common;
 using GridTools.Javelin.MongoDbActivities.Helpers;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Newtonsoft.Json;
 
@@ -44,6 +45,17 @@ namespace GridTools.Javelin.MongoDbActivities
         [DisplayName("Source WHERE Clause (SQL-Style)")]
         [Description("Cláusula WHERE clássica opcional (ex: status = 'ATIVO' AND saldo > 1000). Tem precedência se preenchida.")]
         public InArgument<string> SourceWhereClause { get; set; }
+
+        [Category("1. Source (Production)")]
+        [DisplayName("Include Related Collections (Auto $lookup)")]
+        [Description("Se habilitado, detecta e traz automaticamente os documentos relacionados de outras collections (ex: pedidos, comentarios) via pipeline $lookup do MongoDB garantindo integridade referencial.")]
+        [DefaultValue(false)]
+        public InArgument<bool> IncludeRelatedCollections { get; set; }
+
+        [Category("1. Source (Production)")]
+        [DisplayName("Related Collections Names / Foreign Keys")]
+        [Description("Lista de collections filhas para lookup automático separadas por vírgula (ex: pedidos:cliente_id, comentarios:movie_id). Se vazio com IncludeRelated=true, busca coleções com chaves com sufixo da coleção pai.")]
+        public InArgument<string> RelatedCollectionsMapping { get; set; }
 
         [Category("1. Source (Production)")]
         [DisplayName("Extraction Limit")]
@@ -274,10 +286,77 @@ namespace GridTools.Javelin.MongoDbActivities
                 string sessionId = Path.GetFileName(vaultDir);
                 VaultSessionId.Set(context, sessionId);
 
-                var findFluent = srcCollection.Find(filterDoc);
-                if (limit.HasValue && limit.Value > 0)
+                bool includeRelated = IncludeRelatedCollections.Get(context);
+                string relatedMapping = RelatedCollectionsMapping.Get(context);
+                bool isAggregationPipeline = effectiveFilter.TrimStart().StartsWith("[");
+
+                // Configuração de extração via find ou aggregate ($lookup)
+                IAsyncCursor<BsonDocument> streamCursor = null;
+
+                if (isAggregationPipeline || includeRelated)
                 {
-                    findFluent = findFluent.Limit(limit.Value);
+                    var pipelineStages = new List<BsonDocument>();
+
+                    if (isAggregationPipeline)
+                    {
+                        var arr = BsonSerializer.Deserialize<BsonArray>(effectiveFilter);
+                        foreach (var stage in arr)
+                        {
+                            if (stage.IsBsonDocument) pipelineStages.Add(stage.AsBsonDocument);
+                        }
+                    }
+                    else
+                    {
+                        if (filterDoc != null && filterDoc.ElementCount > 0)
+                        {
+                            pipelineStages.Add(new BsonDocument("$match", filterDoc));
+                        }
+
+                        // Auto Lookup de coleções relacionadas
+                        if (includeRelated)
+                        {
+                            var relatedSpecs = !string.IsNullOrWhiteSpace(relatedMapping)
+                                ? relatedMapping.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                                : new string[0];
+
+                            foreach (var spec in relatedSpecs)
+                            {
+                                var parts = spec.Trim().Split(':');
+                                string childColl = parts[0].Trim();
+                                string foreignKey = parts.Length > 1 ? parts[1].Trim() : $"{srcColl.TrimEnd('s')}_id";
+                                string asField = childColl;
+
+                                pipelineStages.Add(new BsonDocument("$lookup", new BsonDocument
+                                {
+                                    { "from", childColl },
+                                    { "localField", "_id" },
+                                    { "foreignField", foreignKey },
+                                    { "as", asField }
+                                }));
+
+                                GlobalSettings.MessageLogger.LogMessage(
+                                    "[MongoPipeline] Integridade Referencial: Auto $lookup configurado para coleção relacionada '{0}' (Chave: {1} -> _id)",
+                                    childColl, foreignKey);
+                            }
+                        }
+                    }
+
+                    if (limit.HasValue && limit.Value > 0)
+                    {
+                        pipelineStages.Add(new BsonDocument("$limit", limit.Value));
+                    }
+
+                    var pipelineDef = PipelineDefinition<BsonDocument, BsonDocument>.Create(pipelineStages);
+                    streamCursor = srcCollection.Aggregate(pipelineDef);
+                }
+                else
+                {
+                    var findFluent = srcCollection.Find(filterDoc);
+                    if (limit.HasValue && limit.Value > 0)
+                    {
+                        findFluent = findFluent.Limit(limit.Value);
+                    }
+                    streamCursor = findFluent.ToCursor();
                 }
 
                 // 2.1 Aloca Contexto Volátil do TDM Generator (Dummy ProjectID: 0) se disponível
@@ -353,7 +432,7 @@ namespace GridTools.Javelin.MongoDbActivities
 
                 IEnumerable<BsonDocument> DocumentStream()
                 {
-                    using (var cursor = findFluent.ToCursor())
+                    using (var cursor = streamCursor)
                     {
                         long processed = 0;
                         var currentBatch = new List<BsonDocument>();
