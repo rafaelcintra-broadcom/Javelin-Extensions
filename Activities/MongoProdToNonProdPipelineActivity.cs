@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using GridTools.Javelin.Common;
 using GridTools.Javelin.MongoDbActivities.Helpers;
@@ -319,24 +320,96 @@ namespace GridTools.Javelin.MongoDbActivities
                                 ? relatedMapping.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
                                 : new string[0];
 
-                            foreach (var spec in relatedSpecs)
+                            if (relatedSpecs.Length > 0)
                             {
-                                var parts = spec.Trim().Split(':');
-                                string childColl = parts[0].Trim();
-                                string foreignKey = parts.Length > 1 ? parts[1].Trim() : $"{srcColl.TrimEnd('s')}_id";
-                                string asField = childColl;
-
-                                pipelineStages.Add(new BsonDocument("$lookup", new BsonDocument
+                                foreach (var spec in relatedSpecs)
                                 {
-                                    { "from", childColl },
-                                    { "localField", "_id" },
-                                    { "foreignField", foreignKey },
-                                    { "as", asField }
-                                }));
+                                    var parts = spec.Trim().Split(':');
+                                    string childColl = parts[0].Trim();
+                                    string foreignKey = parts.Length > 1 ? parts[1].Trim() : $"{srcColl.TrimEnd('s')}_id";
+                                    string asField = childColl;
 
-                                GlobalSettings.MessageLogger.LogMessage(
-                                    "[MongoPipeline] Integridade Referencial: Auto $lookup configurado para coleção relacionada '{0}' (Chave: {1} -> _id)",
-                                    childColl, foreignKey);
+                                    pipelineStages.Add(new BsonDocument("$lookup", new BsonDocument
+                                    {
+                                        { "from", childColl },
+                                        { "localField", "_id" },
+                                        { "foreignField", foreignKey },
+                                        { "as", asField }
+                                    }));
+
+                                    GlobalSettings.MessageLogger.LogMessage(
+                                        "[MongoPipeline] Integridade Referencial: Auto $lookup configurado para coleção relacionada '{0}' (Chave: {1} -> _id)",
+                                        childColl, foreignKey);
+                                }
+                            }
+                            else
+                            {
+                                // Auto-Discovery Inteligente de coleções relacionadas no banco
+                                try
+                                {
+                                    var allColls = srcCollection.Database.ListCollectionNames().ToList();
+                                    string baseSingular = srcColl.EndsWith("s", StringComparison.OrdinalIgnoreCase) && srcColl.Length > 1
+                                        ? srcColl.Substring(0, srcColl.Length - 1)
+                                        : srcColl;
+
+                                    var candidateFkNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                                    {
+                                        $"{baseSingular}_id",
+                                        $"{srcColl}_id",
+                                        $"{baseSingular}Id",
+                                        $"{srcColl}Id",
+                                        baseSingular,
+                                        $"{baseSingular}_fk"
+                                    };
+
+                                    int discoveredCount = 0;
+                                    foreach (var otherCollName in allColls)
+                                    {
+                                        if (otherCollName.Equals(srcColl, StringComparison.OrdinalIgnoreCase) ||
+                                            otherCollName.StartsWith("system.", StringComparison.OrdinalIgnoreCase))
+                                            continue;
+
+                                        var otherColl = srcCollection.Database.GetCollection<BsonDocument>(otherCollName);
+                                        var sample = otherColl.Find(new BsonDocument()).Limit(1).FirstOrDefault();
+
+                                        if (sample != null)
+                                        {
+                                            foreach (var elem in sample.Elements)
+                                            {
+                                                if (candidateFkNames.Contains(elem.Name))
+                                                {
+                                                    pipelineStages.Add(new BsonDocument("$lookup", new BsonDocument
+                                                    {
+                                                        { "from", otherCollName },
+                                                        { "localField", "_id" },
+                                                        { "foreignField", elem.Name },
+                                                        { "as", otherCollName }
+                                                    }));
+                                                    discoveredCount++;
+                                                    GlobalSettings.MessageLogger.LogMessage(
+                                                        "[MongoPipeline] Integridade Referencial (Auto-Discovery): Coleção relacionada '{0}' detectada automaticamente (Chave estrangeira: '{1}' -> _id)",
+                                                        otherCollName, elem.Name);
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    if (discoveredCount == 0)
+                                    {
+                                        GlobalSettings.MessageLogger.LogMessage(
+                                            "[MongoPipeline] Integridade Referencial: Nenhuma coleção filha com chave estrangeira para '{0}' foi detectada automaticamente.",
+                                            srcColl);
+                                    }
+                                }
+                                catch (Exception exDiscovery)
+                                {
+                                    if (debugLogs)
+                                    {
+                                        GlobalSettings.MessageLogger.LogMessage(
+                                            "[MongoPipeline][DEBUG] Erro no auto-discovery de coleções: {0}", exDiscovery.Message);
+                                    }
+                                }
                             }
                         }
                     }
