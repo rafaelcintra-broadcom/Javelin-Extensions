@@ -130,6 +130,12 @@ namespace GridTools.Javelin.MongoDbActivities
         public InArgument<bool> CreateTdmNoSqlGenerator { get; set; }
 
         [Category("3. Data Assistant Tag Template & TDM Portal")]
+        [DisplayName("Generator Generation Mode")]
+        [Description("Formulas (fórmulas generativas autônomas do Data Painter) ou ReplayMaskedData (grava os valores literais mascarados da extração para replay rápido)")]
+        [DefaultValue("Formulas")]
+        public InArgument<string> GeneratorMode { get; set; }
+
+        [Category("3. Data Assistant Tag Template & TDM Portal")]
         [DisplayName("TDM Generator Name")]
         [Description("Nome personalizado para o NoSQL Generator criado no TDM Portal (opcional)")]
         public InArgument<string> TdmGeneratorName { get; set; }
@@ -263,32 +269,6 @@ namespace GridTools.Javelin.MongoDbActivities
                 GlobalSettings.MessageLogger.LogMessage(
                     "[MongoPipeline] Tag Template validado com sucesso! ({0} regras ativas)", resolvedRules.Count);
 
-                // Opcional: Criar NoSQL Data Generator permanente no TDM Portal
-                if (createNoSqlGen)
-                {
-                    try
-                    {
-                        string resolvedTdmUrl = TdmPortalConnectionProfileResolver.ResolveTdmBaseUrl(portalUrl);
-                        string authHeader = TdmPortalConnectionProfileResolver.ResolveTdmAuthHeader(
-                            resolvedTdmUrl, tdmToken, tdmUser, tdmPass, debugLogs);
-
-                        long effectiveProjId = projId.HasValue && projId.Value > 0 ? projId.Value : 1;
-                        long effectiveVerId = versionIdParam.HasValue && versionIdParam.Value > 0 ? versionIdParam.Value : 1;
-
-                        var sampleDoc = srcCollection.Find(filterDoc).FirstOrDefault();
-                        TdmNoSqlGeneratorManager.CreateNoSqlGenerator(
-                            resolvedTdmUrl, authHeader, effectiveProjId, effectiveVerId, customGenName, tgtColl, resolvedRules, sampleDoc, debugLogs);
-                    }
-                    catch (Exception exGen)
-                    {
-                        GlobalSettings.MessageLogger.LogMessage(
-                            "[TdmGenerator] Aviso: Não foi possível criar o NoSQL Generator no TDM: {0}", exGen.Message);
-                    }
-                }
-                GlobalSettings.MessageLogger.LogMessage(
-                    "[MongoPipeline] Extraindo PROD ({0}.{1}) -> COFRE SEGURO -> NÃO-PROD ({2}.{3}) [Filtro MQL: {4}]",
-                    srcDb, srcColl, tgtDb, tgtColl, filterDoc.ToJson());
-
                 // 2. Instancia Cofre Seguro (Barreiras 1 e 2: ACL NTFS + Windows EFS)
                 vaultDir = SecureVaultHelper.CreateSecureVaultDirectory();
                 string sessionId = Path.GetFileName(vaultDir);
@@ -318,6 +298,47 @@ namespace GridTools.Javelin.MongoDbActivities
                 var maskingEngine = new TdmDataPainterEngine(resolvedRules, generatorContext);
                 int totalMaskedFields = 0;
                 var piiTypeStats = new Dictionary<string, int>();
+
+                // Opcional: Criar NoSQL Data Generator permanente no TDM Portal (Formulas ou Replay)
+                if (createNoSqlGen)
+                {
+                    try
+                    {
+                        string resolvedTdmUrl = TdmPortalConnectionProfileResolver.ResolveTdmBaseUrl(portalUrl);
+                        string authHeader = TdmPortalConnectionProfileResolver.ResolveTdmAuthHeader(
+                            resolvedTdmUrl, tdmToken, tdmUser, tdmPass, debugLogs);
+
+                        long effectiveProjId = projId.HasValue && projId.Value > 0 ? projId.Value : 1;
+                        long effectiveVerId = versionIdParam.HasValue && versionIdParam.Value > 0 ? versionIdParam.Value : 1;
+
+                        string modeStr = (GeneratorMode.Get(context) ?? "Formulas").Trim();
+                        GeneratorDataMode dataMode = modeStr.Equals("ReplayMaskedData", StringComparison.OrdinalIgnoreCase) ||
+                                                     modeStr.Equals("Replay", StringComparison.OrdinalIgnoreCase) ||
+                                                     modeStr.Equals("Literal", StringComparison.OrdinalIgnoreCase)
+                            ? GeneratorDataMode.LiteralMaskedValues
+                            : GeneratorDataMode.Formulas;
+
+                        var sampleRawDoc = srcCollection.Find(filterDoc).FirstOrDefault();
+                        BsonDocument sampleMaskedDoc = null;
+                        if (sampleRawDoc != null)
+                        {
+                            int dummyCount;
+                            sampleMaskedDoc = maskingEngine.MaskDocument(sampleRawDoc, out dummyCount);
+                        }
+
+                        TdmNoSqlGeneratorManager.CreateNoSqlGenerator(
+                            resolvedTdmUrl, authHeader, effectiveProjId, effectiveVerId, customGenName, tgtColl, resolvedRules, sampleRawDoc, sampleMaskedDoc, dataMode, debugLogs);
+                    }
+                    catch (Exception exGen)
+                    {
+                        GlobalSettings.MessageLogger.LogMessage(
+                            "[TdmGenerator] Aviso: Não foi possível criar o NoSQL Generator no TDM: {0}", exGen.Message);
+                    }
+                }
+
+                GlobalSettings.MessageLogger.LogMessage(
+                    "[MongoPipeline] Extraindo PROD ({0}.{1}) -> COFRE SEGURO -> NÃO-PROD ({2}.{3}) [Filtro MQL: {4}]",
+                    srcDb, srcColl, tgtDb, tgtColl, filterDoc.ToJson());
 
                 // 3. Executa streaming de documentos de PROD: Mascara na RAM antes de persistir no cofre
                 long totalCountEstimate = 0;

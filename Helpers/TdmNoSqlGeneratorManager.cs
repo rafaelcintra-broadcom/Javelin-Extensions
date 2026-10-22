@@ -10,6 +10,19 @@ using Newtonsoft.Json.Linq;
 
 namespace GridTools.Javelin.MongoDbActivities.Helpers
 {
+    public enum GeneratorDataMode
+    {
+        /// <summary>
+        /// Fórmulas generativas autônomas do Data Painter (@seedlist, @dob, @randrange, etc.)
+        /// </summary>
+        Formulas,
+
+        /// <summary>
+        /// Valores literais já mascarados da extração atual (replay exato de dados mascarados)
+        /// </summary>
+        LiteralMaskedValues
+    }
+
     /// <summary>
     /// Registra e publica Data Generators do tipo NoSQL (MongoDB) no TDM Portal
     /// via API REST do TDMGeneratorService.
@@ -33,6 +46,8 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             string collectionName,
             List<TdmTagRuleDefinition> rules,
             BsonDocument sampleDoc,
+            BsonDocument maskedDoc = null,
+            GeneratorDataMode dataMode = GeneratorDataMode.Formulas,
             bool enableDebugLogs = false)
         {
             if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(authHeader))
@@ -47,58 +62,85 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                 : $"GEN_NOSQL_{collectionName}_{DateTime.Now:yyyyMMdd_HHmmss}";
 
             GlobalSettings.MessageLogger.LogMessage(
-                "[TdmGenerator] Criando NoSQL Data Generator '{0}' no TDM Portal (Projeto: {1}, Versão: {2})...",
-                genName, projectId, versionId);
+                "[TdmGenerator] Criando NoSQL Data Generator '{0}' no TDM Portal (Modo: {1}, Projeto: {2}, Versão: {3})...",
+                genName, dataMode, projectId, versionId);
 
             // 1. Monta as definições de colunas e regras do gerador
             var columnDefinitions = new List<object>();
 
-            if (sampleDoc != null)
+            var refDoc = (dataMode == GeneratorDataMode.LiteralMaskedValues && maskedDoc != null)
+                ? maskedDoc
+                : sampleDoc;
+
+            if (refDoc != null)
             {
-                foreach (var elem in sampleDoc.Elements)
+                foreach (var elem in refDoc.Elements)
                 {
                     string fieldName = elem.Name;
                     string formula = "";
 
-                    // Procura se tem regra mapeada para este campo
-                    if (rules != null)
+                    if (dataMode == GeneratorDataMode.LiteralMaskedValues)
                     {
-                        foreach (var r in rules)
+                        // Modo Literal: Grava o valor literal exato que foi mascarado
+                        if (elem.Value.IsString)
                         {
-                            if (r.Pattern != null && r.Pattern.IsMatch(fieldName))
-                            {
-                                formula = r.DataPainterExpr ?? "";
-                                break;
-                            }
+                            formula = $"'{elem.Value.AsString.Replace("'", "''")}'";
                         }
-                    }
-
-                    // Se não tiver fórmula de PII, define geração padrão com base no tipo BSON
-                    if (string.IsNullOrWhiteSpace(formula))
-                    {
-                        if (fieldName == "_id")
+                        else if (elem.Value.IsObjectId)
                         {
-                            formula = "@formatencrypt(@randdigits(24)@)@";
-                        }
-                        else if (elem.Value.IsInt32 || elem.Value.IsInt64)
-                        {
-                            formula = "@randrange(1, 1000)@";
-                        }
-                        else if (elem.Value.IsDouble)
-                        {
-                            formula = "@randrange(10.0, 500.0, 2)@";
+                            formula = $"'{elem.Value.AsObjectId}'";
                         }
                         else if (elem.Value.IsBoolean)
                         {
-                            formula = "@randval('true', 'false')@";
-                        }
-                        else if (elem.Value.IsBsonDateTime)
-                        {
-                            formula = "@dob(18, 65)@";
+                            formula = elem.Value.AsBoolean ? "'true'" : "'false'";
                         }
                         else
                         {
-                            formula = $"'{elem.Value.ToString()}'";
+                            formula = elem.Value.ToString();
+                        }
+                    }
+                    else
+                    {
+                        // Modo Fórmulas: Procura se tem regra mapeada para este campo
+                        if (rules != null)
+                        {
+                            foreach (var r in rules)
+                            {
+                                if (r.Pattern != null && r.Pattern.IsMatch(fieldName))
+                                {
+                                    formula = r.DataPainterExpr ?? "";
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Se não tiver fórmula de PII, define geração padrão com base no tipo BSON
+                        if (string.IsNullOrWhiteSpace(formula))
+                        {
+                            if (fieldName == "_id")
+                            {
+                                formula = "@formatencrypt(@randdigits(24)@)@";
+                            }
+                            else if (elem.Value.IsInt32 || elem.Value.IsInt64)
+                            {
+                                formula = "@randrange(1, 1000)@";
+                            }
+                            else if (elem.Value.IsDouble)
+                            {
+                                formula = "@randrange(10.0, 500.0, 2)@";
+                            }
+                            else if (elem.Value.IsBoolean)
+                            {
+                                formula = "@randval('true', 'false')@";
+                            }
+                            else if (elem.Value.IsBsonDateTime)
+                            {
+                                formula = "@dob(18, 65)@";
+                            }
+                            else
+                            {
+                                formula = $"'{elem.Value.ToString().Replace("'", "''")}'";
+                            }
                         }
                     }
 
@@ -115,7 +157,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             var generatorPayload = new
             {
                 name = genName,
-                description = $"Auto-generated NoSQL MongoDB Generator for collection '{collectionName}' via Javelin Pipeline",
+                description = $"Auto-generated NoSQL MongoDB Generator for collection '{collectionName}' (Mode: {dataMode}) via Javelin Pipeline",
                 projectId = projectId,
                 versionId = versionId,
                 type = "NOSQL",
@@ -152,8 +194,8 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                     if (generatorId > 0)
                     {
                         GlobalSettings.MessageLogger.LogMessage(
-                            "[TdmGenerator] ✅ NoSQL Data Generator '{0}' criado com sucesso no TDM! (GeneratorID: {1})",
-                            genName, generatorId);
+                            "[TdmGenerator] ✅ NoSQL Data Generator '{0}' criado com sucesso no TDM! (GeneratorID: {1}, Modo: {2})",
+                            genName, generatorId, dataMode);
 
                         // 3. Cadastra as definições de dados (colunas/fórmulas) no gerador
                         if (columnDefinitions.Count > 0)
