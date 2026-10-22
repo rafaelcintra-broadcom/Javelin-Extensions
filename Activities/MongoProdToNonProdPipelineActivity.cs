@@ -263,6 +263,7 @@ namespace GridTools.Javelin.MongoDbActivities
 
                 var maskingEngine = new TdmDataPainterEngine(resolvedRules, generatorContext);
                 int totalMaskedFields = 0;
+                var piiTypeStats = new Dictionary<string, int>();
 
                 // 3. Executa streaming de documentos de PROD: Mascara na RAM antes de persistir no cofre
                 long totalCountEstimate = 0;
@@ -291,7 +292,7 @@ namespace GridTools.Javelin.MongoDbActivities
                                 if (currentBatch.Count >= batchSize)
                                 {
                                     int batchMasked;
-                                    var maskedBatch = maskingEngine.MaskDocumentsBatch(currentBatch, out batchMasked);
+                                    var maskedBatch = maskingEngine.MaskDocumentsBatch(currentBatch, out batchMasked, piiTypeStats);
                                     totalMaskedFields += batchMasked;
                                     processed += maskedBatch.Count;
 
@@ -312,7 +313,7 @@ namespace GridTools.Javelin.MongoDbActivities
                         if (currentBatch.Count > 0)
                         {
                             int batchMasked;
-                            var maskedBatch = maskingEngine.MaskDocumentsBatch(currentBatch, out batchMasked);
+                            var maskedBatch = maskingEngine.MaskDocumentsBatch(currentBatch, out batchMasked, piiTypeStats);
                             totalMaskedFields += batchMasked;
                             processed += maskedBatch.Count;
 
@@ -330,6 +331,22 @@ namespace GridTools.Javelin.MongoDbActivities
                 GlobalSettings.MessageLogger.LogMessage(
                     "[MongoPipeline] Extração e mascaramento concluídos: {0} documentos gravados no cofre (Campos PII mascarados: {1}, SHA256: {2})",
                     extractedCount, totalMaskedFields, sha256);
+
+                if (piiTypeStats.Count > 0)
+                {
+                    var piiBreakdown = new List<string>();
+                    foreach (var kvp in piiTypeStats)
+                    {
+                        piiBreakdown.Add($"{kvp.Key}: {kvp.Value}");
+                    }
+                    GlobalSettings.MessageLogger.LogMessage(
+                        "[MongoPipeline] Detalhamento de PII mascarados por tipo/tag: [{0}]",
+                        string.Join(", ", piiBreakdown));
+                }
+                else
+                {
+                    GlobalSettings.MessageLogger.LogMessage("[MongoPipeline] Nenhum campo PII correspondente foi detectado para mascaramento.");
+                }
 
                 // 4. Carga em NÃO-PROD (os documentos no cofre já estão 100% mascarados e seguros)
                 long loadedCount = 0;
@@ -417,6 +434,7 @@ namespace GridTools.Javelin.MongoDbActivities
                     target = $"{tgtDb}.{tgtColl}",
                     totalDocuments = loadedCount,
                     totalPiiFieldsMasked = totalMaskedFields,
+                    piiMaskedBreakdown = piiTypeStats,
                     sha256Checksum = sha256,
                     vaultSessionId = sessionId,
                     dryRun = dryRun,

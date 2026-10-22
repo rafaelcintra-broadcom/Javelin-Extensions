@@ -50,7 +50,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             _tdmContextClient = tdmContextClient;
         }
 
-        public BsonDocument MaskDocument(BsonDocument sourceDoc, out int maskedFieldCount)
+        public BsonDocument MaskDocument(BsonDocument sourceDoc, out int maskedFieldCount, Dictionary<string, int> tagStats = null)
         {
             maskedFieldCount = 0;
             if (sourceDoc == null) return null;
@@ -81,11 +81,16 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                 {
                     maskedDoc.Add(fieldName, EvaluateFormulaToBson(matchedRule.DataPainterExpr, fieldName, elem.Value));
                     maskedFieldCount++;
+                    if (tagStats != null)
+                    {
+                        string tagKey = matchedRule.Tag ?? matchedRule.Name ?? "PII";
+                        tagStats[tagKey] = tagStats.TryGetValue(tagKey, out var c) ? c + 1 : 1;
+                    }
                 }
                 else if (elem.Value.IsBsonDocument)
                 {
                     int subCount;
-                    maskedDoc.Add(fieldName, MaskDocument(elem.Value.AsBsonDocument, out subCount));
+                    maskedDoc.Add(fieldName, MaskDocument(elem.Value.AsBsonDocument, out subCount, tagStats));
                     maskedFieldCount += subCount;
                 }
                 else if (elem.Value.IsBsonArray)
@@ -97,7 +102,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                         if (item.IsBsonDocument)
                         {
                             int subCount;
-                            newArr.Add(MaskDocument(item.AsBsonDocument, out subCount));
+                            newArr.Add(MaskDocument(item.AsBsonDocument, out subCount, tagStats));
                             maskedFieldCount += subCount;
                         }
                         else
@@ -120,7 +125,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
         /// Mascara um bloco/lote de documentos MongoDB.
         /// Quando o cliente de contexto do TDM estiver ativo, envia as fórmulas em lote para resolução oficial.
         /// </summary>
-        public List<BsonDocument> MaskDocumentsBatch(List<BsonDocument> sourceBatch, out int batchMaskedFields)
+        public List<BsonDocument> MaskDocumentsBatch(List<BsonDocument> sourceBatch, out int batchMaskedFields, Dictionary<string, int> tagStats = null)
         {
             batchMaskedFields = 0;
             if (sourceBatch == null || sourceBatch.Count == 0) return new List<BsonDocument>();
@@ -131,7 +136,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                 try
                 {
                     var expressionsToResolve = new List<string>();
-                    var targets = new List<Tuple<int, string, BsonValue>>(); // docIndex, fieldName, originalVal
+                    var targets = new List<Tuple<int, string, BsonValue, string>>(); // docIndex, fieldName, originalVal, tagName
 
                     // Mapeia campos a serem mascarados no lote
                     for (int i = 0; i < sourceBatch.Count; i++)
@@ -147,7 +152,8 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                                 {
                                     string expr = PrepareExpressionForTdm(rule.DataPainterExpr, elem.Value);
                                     expressionsToResolve.Add(expr);
-                                    targets.Add(Tuple.Create(i, elem.Name, elem.Value));
+                                    string tag = rule.Tag ?? rule.Name ?? "PII";
+                                    targets.Add(Tuple.Create(i, elem.Name, elem.Value, tag));
                                     break;
                                 }
                             }
@@ -167,6 +173,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                                 int docIdx = targets[k].Item1;
                                 string fName = targets[k].Item2;
                                 BsonValue origVal = targets[k].Item3;
+                                string tagName = targets[k].Item4;
 
                                 if (!docMap.TryGetValue(docIdx, out var fields))
                                 {
@@ -176,6 +183,10 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
 
                                 fields[fName] = ConvertStringToBsonValue(resolvedValues[k], origVal);
                                 batchMaskedFields++;
+                                if (tagStats != null)
+                                {
+                                    tagStats[tagName] = tagStats.TryGetValue(tagName, out var c) ? c + 1 : 1;
+                                }
                             }
 
                             for (int i = 0; i < sourceBatch.Count; i++)
@@ -210,7 +221,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             foreach (var doc in sourceBatch)
             {
                 int count;
-                fallbackDocs.Add(MaskDocument(doc, out count));
+                fallbackDocs.Add(MaskDocument(doc, out count, tagStats));
                 batchMaskedFields += count;
             }
             return fallbackDocs;
