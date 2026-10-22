@@ -467,10 +467,15 @@ namespace GridTools.Javelin.MongoDbActivities
                 if (!dryRun)
                 {
                     GlobalSettings.MessageLogger.LogMessage(
-                        "[MongoPipeline] Consultas para validar no MongoDB Destino:\n" +
-                        "  • Shell (mongosh): use {0}; db.{1}.find().limit(5).pretty();\n" +
-                        "  • Compass (Filter): {{}}\n" +
-                        "  • Total Count: db.{1}.countDocuments();",
+                        "[MongoPipeline] Consultas para validar no MongoDB Destino ({0}.{1}):\n" +
+                        "  • Shell (mongosh):\n" +
+                        "      use {0};\n" +
+                        "      db.{1}.find().limit(5).pretty();\n" +
+                        "      db.{1}.countDocuments();\n" +
+                        "  • Compass JSON (Filter / Project / Sort):\n" +
+                        "      Filter:  {{}}\n" +
+                        "      Project: {{ \"_id\": 1 }}\n" +
+                        "      Sort:    {{ \"_id\": -1 }}",
                         tgtDb, tgtColl);
                 }
             }
