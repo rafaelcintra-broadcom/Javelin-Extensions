@@ -439,6 +439,13 @@ namespace GridTools.Javelin.MongoDbActivities
                     vaultSessionId = sessionId,
                     dryRun = dryRun,
                     executionTimeMs = elapsedMs,
+                    targetVerification = new
+                    {
+                        database = tgtDb,
+                        collection = tgtColl,
+                        mongoshCommand = $"use {tgtDb}; db.{tgtColl}.find().limit(5).pretty();",
+                        compassFilter = "{}"
+                    },
                     securitySafeguards = new[]
                     {
                         "Tag Template Enforcement (Fail-Closed)",
@@ -460,10 +467,10 @@ namespace GridTools.Javelin.MongoDbActivities
                 if (!dryRun)
                 {
                     GlobalSettings.MessageLogger.LogMessage(
-                        "[MongoPipeline] Consulta para validar no MongoDB Destino (mongosh / Compass):\n" +
-                        "  use {0};\n" +
-                        "  db.{1}.find().limit(5).pretty();\n" +
-                        "  db.{1}.countDocuments();",
+                        "[MongoPipeline] Consultas para validar no MongoDB Destino:\n" +
+                        "  • Shell (mongosh): use {0}; db.{1}.find().limit(5).pretty();\n" +
+                        "  • Compass (Filter): {{}}\n" +
+                        "  • Total Count: db.{1}.countDocuments();",
                         tgtDb, tgtColl);
                 }
             }
