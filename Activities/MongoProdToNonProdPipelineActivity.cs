@@ -456,6 +456,16 @@ namespace GridTools.Javelin.MongoDbActivities
                 GlobalSettings.MessageLogger.LogMessage(
                     "[MongoPipeline] Pipeline concluído com sucesso em {0}ms! Processados: {1}, PII Mascarados: {2}",
                     elapsedMs, loadedCount, totalMaskedFields);
+
+                if (!dryRun)
+                {
+                    GlobalSettings.MessageLogger.LogMessage(
+                        "[MongoPipeline] Consulta para validar no MongoDB Destino (mongosh / Compass):\n" +
+                        "  use {0};\n" +
+                        "  db.{1}.find().limit(5).pretty();\n" +
+                        "  db.{1}.countDocuments();",
+                        tgtDb, tgtColl);
+                }
             }
             catch (Exception ex)
             {
