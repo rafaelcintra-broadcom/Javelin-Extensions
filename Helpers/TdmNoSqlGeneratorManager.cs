@@ -117,9 +117,11 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                         // Se não tiver fórmula de PII, define geração padrão com base no tipo BSON
                         if (string.IsNullOrWhiteSpace(formula))
                         {
-                            if (fieldName == "_id")
+                            if (fieldName == "_id" || elem.Value.IsObjectId)
                             {
-                                formula = "@formatencrypt(@randdigits(24)@)@";
+                                // No TDM MetaFunctions, randhex(minBytes, maxBytes) gera 24 caracteres hexadecimais (12 bytes)
+                                // que é exatamente o formato e tamanho padrão de um BSON ObjectId do MongoDB.
+                                formula = "@randhex(12,12)@";
                             }
                             else if (elem.Value.IsInt32 || elem.Value.IsInt64)
                             {
