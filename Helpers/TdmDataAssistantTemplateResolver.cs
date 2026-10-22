@@ -252,7 +252,31 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
 
                     if (string.IsNullOrWhiteSpace(pattern))
                     {
-                        pattern = $"(?i).*{Regex.Escape(configName)}.*";
+                        string lower = (tagName + " " + configName).ToLowerInvariant();
+                        if (lower.Contains("first name") || lower.Equals("name") || lower.Contains("first_name"))
+                            pattern = @"(?i).*(first.*name|primeiro.*nome|prenome|^name$|^nome$).*";
+                        else if (lower.Contains("last name") || lower.Contains("last_name") || lower.Contains("surname"))
+                            pattern = @"(?i).*(last.*name|sobrenome|surname|ultimo.*nome).*";
+                        else if (lower.Contains("city") || lower.Contains("cidade"))
+                            pattern = @"(?i).*(city|cidade|municipio).*";
+                        else if (lower.Contains("state") || lower.Contains("estado") || lower.Contains("uf"))
+                            pattern = @"(?i).*(state|estado|^uf$).*";
+                        else if (lower.Contains("cep") || lower.Contains("zip"))
+                            pattern = @"(?i).*(cep|zip|postal).*";
+                        else if (lower.Contains("address") || lower.Contains("endereco") || lower.Contains("rua"))
+                            pattern = @"(?i).*(address|endereco|logradouro|rua|street).*";
+                        else if (lower.Contains("cpf"))
+                            pattern = @"(?i).*(cpf|num.*cpf|cpf.*cli|cpfcnpj).*";
+                        else if (lower.Contains("cnpj"))
+                            pattern = @"(?i).*(cnpj|num.*cnpj|cgc).*";
+                        else if (lower.Contains("email"))
+                            pattern = @"(?i).*(email|e_mail|correio_e).*";
+                        else if (lower.Contains("phone") || lower.Contains("cel") || lower.Contains("tel"))
+                            pattern = @"(?i).*(phone|telefone|celular|mobile).*";
+                        else if (lower.Contains("age") || lower.Contains("idade"))
+                            pattern = @"(?i).*(^age$|^idade$).*";
+                        else
+                            pattern = $"(?i).*{Regex.Escape(configName)}.*";
                     }
 
                     if (string.IsNullOrWhiteSpace(dataPainterExpr))
