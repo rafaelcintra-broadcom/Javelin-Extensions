@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using GridTools.Javelin.Common;
 using GridTools.Javelin.MongoDbActivities.Helpers;
 using MongoDB.Bson;
@@ -117,6 +118,33 @@ namespace GridTools.Javelin.MongoDbActivities
         [Description("Opcional: ID ou Nome do Projeto no TDM para carregar regras específicas de projeto")]
         public InArgument<string> ProjectIdentifier { get; set; }
 
+        [Category("3. Data Assistant Tag Template & TDM Portal")]
+        [DisplayName("TDM Version ID")]
+        [Description("Opcional: ID da Versão do Projeto no TDM Portal (necessário para registrar o Generator)")]
+        public InArgument<long?> VersionIdentifier { get; set; }
+
+        [Category("3. Data Assistant Tag Template & TDM Portal")]
+        [DisplayName("Create TDM NoSQL Generator")]
+        [Description("Se habilitado, registra e publica um NoSQL Data Generator permanente no TDM Portal com as regras e esquema mascarados")]
+        [DefaultValue(false)]
+        public InArgument<bool> CreateTdmNoSqlGenerator { get; set; }
+
+        [Category("3. Data Assistant Tag Template & TDM Portal")]
+        [DisplayName("TDM Generator Name")]
+        [Description("Nome personalizado para o NoSQL Generator criado no TDM Portal (opcional)")]
+        public InArgument<string> TdmGeneratorName { get; set; }
+
+        [Category("4. Security Vault & Performance")]
+        [DisplayName("Export Masked Data to JSON File")]
+        [Description("Se habilitado, exporta uma cópia dos documentos mascarados em formato JSON no JobFolder/diretório de trabalho do TDM ou caminho especificado")]
+        [DefaultValue(false)]
+        public InArgument<bool> ExportMaskedJsonFile { get; set; }
+
+        [Category("4. Security Vault & Performance")]
+        [DisplayName("Custom JSON Output Directory")]
+        [Description("Diretório opcional para gravação do arquivo JSON. Se vazio, detecta automaticamente o working folder do Job TDM ou pasta local.")]
+        public InArgument<string> JsonOutputDirectory { get; set; }
+
         [Category("4. Security Vault & Performance")]
         [DisplayName("Batch Size")]
         [Description("Commit batch size for extraction and bulk insert (default: 2000)")]
@@ -209,6 +237,9 @@ namespace GridTools.Javelin.MongoDbActivities
                 string tdmPass = TdmPassword.Get(context);
                 string tdmToken = TdmAuthToken.Get(context);
                 string projIdStr = ProjectIdentifier.Get(context);
+                long? versionIdParam = VersionIdentifier.Get(context);
+                bool createNoSqlGen = CreateTdmNoSqlGenerator.Get(context);
+                string customGenName = TdmGeneratorName.Get(context);
                 long? projId = null;
                 if (!string.IsNullOrWhiteSpace(projIdStr) && long.TryParse(projIdStr, out long pVal))
                 {
@@ -231,6 +262,29 @@ namespace GridTools.Javelin.MongoDbActivities
 
                 GlobalSettings.MessageLogger.LogMessage(
                     "[MongoPipeline] Tag Template validado com sucesso! ({0} regras ativas)", resolvedRules.Count);
+
+                // Opcional: Criar NoSQL Data Generator permanente no TDM Portal
+                if (createNoSqlGen)
+                {
+                    try
+                    {
+                        string resolvedTdmUrl = TdmPortalConnectionProfileResolver.ResolveTdmBaseUrl(portalUrl);
+                        string authHeader = TdmPortalConnectionProfileResolver.ResolveTdmAuthHeader(
+                            resolvedTdmUrl, tdmToken, tdmUser, tdmPass, debugLogs);
+
+                        long effectiveProjId = projId.HasValue && projId.Value > 0 ? projId.Value : 1;
+                        long effectiveVerId = versionIdParam.HasValue && versionIdParam.Value > 0 ? versionIdParam.Value : 1;
+
+                        var sampleDoc = srcCollection.Find(filterDoc).FirstOrDefault();
+                        TdmNoSqlGeneratorManager.CreateNoSqlGenerator(
+                            resolvedTdmUrl, authHeader, effectiveProjId, effectiveVerId, customGenName, tgtColl, resolvedRules, sampleDoc, debugLogs);
+                    }
+                    catch (Exception exGen)
+                    {
+                        GlobalSettings.MessageLogger.LogMessage(
+                            "[TdmGenerator] Aviso: Não foi possível criar o NoSQL Generator no TDM: {0}", exGen.Message);
+                    }
+                }
                 GlobalSettings.MessageLogger.LogMessage(
                     "[MongoPipeline] Extraindo PROD ({0}.{1}) -> COFRE SEGURO -> NÃO-PROD ({2}.{3}) [Filtro MQL: {4}]",
                     srcDb, srcColl, tgtDb, tgtColl, filterDoc.ToJson());
@@ -346,6 +400,52 @@ namespace GridTools.Javelin.MongoDbActivities
                 else
                 {
                     GlobalSettings.MessageLogger.LogMessage("[MongoPipeline] Nenhum campo PII correspondente foi detectado para mascaramento.");
+                }
+
+                // Exportação opcional de JSON para a pasta do Job / WorkingFolder do TDM
+                bool exportJson = ExportMaskedJsonFile.Get(context);
+                string customJsonDir = JsonOutputDirectory.Get(context);
+                string exportedJsonFilePath = null;
+
+                if (exportJson)
+                {
+                    try
+                    {
+                        string targetDir = !string.IsNullOrWhiteSpace(customJsonDir) && Directory.Exists(customJsonDir)
+                            ? customJsonDir
+                            : AppDomain.CurrentDomain.BaseDirectory;
+
+                        // Se estiver rodando sob JavelinExecutor acionado pelo TDM Portal
+                        string curDir = Directory.GetCurrentDirectory();
+                        if (string.IsNullOrWhiteSpace(customJsonDir) && Directory.Exists(curDir))
+                        {
+                            targetDir = curDir;
+                        }
+
+                        exportedJsonFilePath = Path.Combine(targetDir, $"{tgtColl}_masked_{DateTime.Now:yyyyMMdd_HHmmss}.json");
+                        using (var swJson = new StreamWriter(exportedJsonFilePath, false, Encoding.UTF8))
+                        {
+                            swJson.WriteLine("[");
+                            bool first = true;
+                            foreach (var doc in SecureVaultHelper.ReadDocumentsFromVault(vaultFile))
+                            {
+                                if (!first) swJson.WriteLine(",");
+                                swJson.Write(doc.ToJson());
+                                first = false;
+                            }
+                            swJson.WriteLine();
+                            swJson.WriteLine("]");
+                        }
+
+                        GlobalSettings.MessageLogger.LogMessage(
+                            "[MongoPipeline] ✅ Arquivo JSON com os dados mascarados exportado com sucesso em: {0}",
+                            exportedJsonFilePath);
+                    }
+                    catch (Exception exJson)
+                    {
+                        GlobalSettings.MessageLogger.LogMessage(
+                            "[MongoPipeline] Aviso: Falha ao exportar arquivo JSON: {0}", exJson.Message);
+                    }
                 }
 
                 // 4. Carga em NÃO-PROD (os documentos no cofre já estão 100% mascarados e seguros)
