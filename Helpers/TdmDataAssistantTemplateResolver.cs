@@ -130,15 +130,6 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
 
                     if (!resp.IsSuccessStatusCode)
                     {
-                        if (enableDebugLogs)
-                        {
-                            string respExcerpt = !string.IsNullOrWhiteSpace(json) && json.Length > 200
-                                ? json.Substring(0, 200) + "..."
-                                : json;
-                            GlobalSettings.MessageLogger.LogMessage(
-                                "[DataAssistant][DEBUG] Consulta GET {0} retornou HTTP {1}: {2}",
-                                endpoint, (int)resp.StatusCode, respExcerpt);
-                        }
                         continue;
                     }
 
