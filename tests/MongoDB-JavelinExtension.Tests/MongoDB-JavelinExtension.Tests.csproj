@@ -24,6 +24,7 @@
     <Compile Include="..\..\Helpers\Crypto\TdmCryptEngine.cs" Link="Helpers\Crypto\TdmCryptEngine.cs" />
     <Compile Include="..\..\Helpers\TdmDataAssistantTemplateResolver.cs" Link="Helpers\TdmDataAssistantTemplateResolver.cs" />
     <Compile Include="..\..\Helpers\TdmDataPainterEngine.cs" Link="Helpers\TdmDataPainterEngine.cs" />
+    <Compile Include="..\..\Helpers\TdmGeneratorContextClient.cs" Link="Helpers\TdmGeneratorContextClient.cs" />
     <Compile Include="..\..\Helpers\SecureVaultHelper.cs" Link="Helpers\SecureVaultHelper.cs" />
   </ItemGroup>
 

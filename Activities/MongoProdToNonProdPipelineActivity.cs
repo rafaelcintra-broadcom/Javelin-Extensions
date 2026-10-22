@@ -168,6 +168,7 @@ namespace GridTools.Javelin.MongoDbActivities
             string vaultDir = null;
             string vaultFile = null;
             bool autoShred = true;
+            TdmGeneratorContextClient generatorContext = null;
 
             try
             {
@@ -245,7 +246,22 @@ namespace GridTools.Javelin.MongoDbActivities
                     findFluent = findFluent.Limit(limit.Value);
                 }
 
-                var maskingEngine = new TdmDataPainterEngine(resolvedRules);
+                // 2.1 Aloca Contexto Volátil do TDM Generator (Dummy ProjectID: 0) se disponível
+                try
+                {
+                    string resolvedTdmUrl = TdmPortalConnectionProfileResolver.ResolveTdmBaseUrl(portalUrl);
+                    string authHeader = TdmPortalConnectionProfileResolver.ResolveTdmAuthHeader(
+                        resolvedTdmUrl, tdmToken, tdmUser, tdmPass, debugLogs);
+
+                    if (!string.IsNullOrWhiteSpace(resolvedTdmUrl) && !string.IsNullOrWhiteSpace(authHeader))
+                    {
+                        generatorContext = new TdmGeneratorContextClient(resolvedTdmUrl, authHeader, debugLogs);
+                        generatorContext.InitializeDummyContext(projectId: projId.HasValue ? (int)projId.Value : 0, versionId: 0, levelId: 0);
+                    }
+                }
+                catch { }
+
+                var maskingEngine = new TdmDataPainterEngine(resolvedRules, generatorContext);
                 int totalMaskedFields = 0;
 
                 // 3. Executa streaming de documentos de PROD: Mascara na RAM antes de persistir no cofre
@@ -264,25 +280,44 @@ namespace GridTools.Javelin.MongoDbActivities
                     using (var cursor = findFluent.ToCursor())
                     {
                         long processed = 0;
+                        var currentBatch = new List<BsonDocument>();
+
                         while (cursor.MoveNext())
                         {
                             foreach (var doc in cursor.Current)
                             {
-                                int count;
-                                var masked = maskingEngine.MaskDocument(doc, out count);
-                                totalMaskedFields += count;
-                                processed++;
+                                currentBatch.Add(doc);
 
-                                if (processed % 1000 == 0 || (totalCountEstimate > 0 && processed == totalCountEstimate))
+                                if (currentBatch.Count >= batchSize)
                                 {
-                                    GlobalSettings.MessageLogger.LogMessage(
-                                        "[MongoPipeline] Progresso do mascaramento/extração: {0}{1} documentos processados...",
-                                        processed,
-                                        totalCountEstimate > 0 ? $" de {totalCountEstimate}" : "");
-                                }
+                                    int batchMasked;
+                                    var maskedBatch = maskingEngine.MaskDocumentsBatch(currentBatch, out batchMasked);
+                                    totalMaskedFields += batchMasked;
+                                    processed += maskedBatch.Count;
 
-                                yield return masked;
+                                    if (processed % 1000 == 0 || (totalCountEstimate > 0 && processed == totalCountEstimate))
+                                    {
+                                        GlobalSettings.MessageLogger.LogMessage(
+                                            "[MongoPipeline] Progresso do mascaramento/extração: {0}{1} documentos processados...",
+                                            processed,
+                                            totalCountEstimate > 0 ? $" de {totalCountEstimate}" : "");
+                                    }
+
+                                    foreach (var mDoc in maskedBatch) yield return mDoc;
+                                    currentBatch.Clear();
+                                }
                             }
+                        }
+
+                        if (currentBatch.Count > 0)
+                        {
+                            int batchMasked;
+                            var maskedBatch = maskingEngine.MaskDocumentsBatch(currentBatch, out batchMasked);
+                            totalMaskedFields += batchMasked;
+                            processed += maskedBatch.Count;
+
+                            foreach (var mDoc in maskedBatch) yield return mDoc;
+                            currentBatch.Clear();
                         }
                     }
                 }
@@ -414,6 +449,12 @@ namespace GridTools.Javelin.MongoDbActivities
             }
             finally
             {
+                // Libera o contexto temporário de memória no TDM Generator
+                if (generatorContext != null)
+                {
+                    try { generatorContext.Dispose(); } catch { }
+                }
+
                 // Barreira 4: Sanitização Forense Zero-Fill e destruição do cofre
                 if (autoShred && !string.IsNullOrWhiteSpace(vaultDir) && Directory.Exists(vaultDir))
                 {

@@ -112,6 +112,36 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers.Tests
             Assert.Contains("@", masked["titular"]["email"].AsString);
         }
 
+        [Fact]
+        public void MaskDocumentsBatch_ProcessesBatchCorrectly()
+        {
+            var engine = new TdmDataPainterEngine(CreateSampleRules());
+            var batch = new List<BsonDocument>
+            {
+                new BsonDocument { { "cpf", "111.222.333-44" }, { "nome_titular", "Alice" } },
+                new BsonDocument { { "cpf", "555.666.777-88" }, { "email", "alice@example.com" } }
+            };
+
+            int batchMasked;
+            var maskedBatch = engine.MaskDocumentsBatch(batch, out batchMasked);
+
+            Assert.Equal(2, maskedBatch.Count);
+            Assert.Equal(4, batchMasked);
+            Assert.NotEqual("111.222.333-44", maskedBatch[0]["cpf"].AsString);
+            Assert.NotEqual("alice@example.com", maskedBatch[1]["email"].AsString);
+        }
+
+        [Fact]
+        public void TdmGeneratorContextClient_InitializesWithDummyPropertiesWithoutCrashing()
+        {
+            var client = new TdmGeneratorContextClient("https://invalid-host:9999", "dummy-token", enableDebugLogs: false);
+            Assert.False(client.IsActive);
+            bool success = client.InitializeDummyContext(projectId: 0, versionId: 0, levelId: 0);
+            Assert.False(success);
+            Assert.Null(client.ResolveMultipleExpressions(new List<string> { "@seedlist(FirstName)@" }));
+            client.Dispose();
+        }
+
         private bool IsValidCpfMod11(string cpf)
         {
             int[] mult1 = { 10, 9, 8, 7, 6, 5, 4, 3, 2 };

@@ -11,11 +11,13 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
 {
     /// <summary>
     /// Motor de Mascaramento NoSQL que consome as regras resolvidas do Tag Template do Data Assistant.
+    /// Suporta avaliação direta no motor oficial do TDM (ContextGenerators) e motor local de alta velocidade.
     /// </summary>
     public class TdmDataPainterEngine
     {
         private readonly Random _random;
         private readonly List<TdmTagRuleDefinition> _rules;
+        private readonly TdmGeneratorContextClient _tdmContextClient;
 
         private static readonly string[] FirstNames = {
             "Lucas", "Gabriel", "Mateus", "Felipe", "Rodrigo", "Guilherme", "Gustavo", "Leonardo", "Bruno", "Thiago",
@@ -37,7 +39,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             "Avenida Ipiranga", "Rua Sete de Setembro", "Avenida Atlantica", "Rua da Consolacao", "Avenida Morumbi"
         };
 
-        public TdmDataPainterEngine(List<TdmTagRuleDefinition> resolvedTemplateRules)
+        public TdmDataPainterEngine(List<TdmTagRuleDefinition> resolvedTemplateRules, TdmGeneratorContextClient tdmContextClient = null)
         {
             _random = new Random();
             if (resolvedTemplateRules == null || resolvedTemplateRules.Count == 0)
@@ -45,6 +47,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                 throw new InvalidOperationException("O motor de mascaramento requer uma lista válida de regras de Tag Template.");
             }
             _rules = resolvedTemplateRules;
+            _tdmContextClient = tdmContextClient;
         }
 
         public BsonDocument MaskDocument(BsonDocument sourceDoc, out int maskedFieldCount)
@@ -113,6 +116,133 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
             return maskedDoc;
         }
 
+        /// <summary>
+        /// Mascara um bloco/lote de documentos MongoDB.
+        /// Quando o cliente de contexto do TDM estiver ativo, envia as fórmulas em lote para resolução oficial.
+        /// </summary>
+        public List<BsonDocument> MaskDocumentsBatch(List<BsonDocument> sourceBatch, out int batchMaskedFields)
+        {
+            batchMaskedFields = 0;
+            if (sourceBatch == null || sourceBatch.Count == 0) return new List<BsonDocument>();
+
+            // Se o contexto remoto do TDM estiver ativo, tenta resolver as expressões em lote
+            if (_tdmContextClient != null && _tdmContextClient.IsActive)
+            {
+                try
+                {
+                    var expressionsToResolve = new List<string>();
+                    var targets = new List<Tuple<int, string, BsonValue>>(); // docIndex, fieldName, originalVal
+
+                    // Mapeia campos a serem mascarados no lote
+                    for (int i = 0; i < sourceBatch.Count; i++)
+                    {
+                        var doc = sourceBatch[i];
+                        foreach (var elem in doc.Elements)
+                        {
+                            if (elem.Name == "_id" && elem.Value.IsObjectId) continue;
+
+                            foreach (var rule in _rules)
+                            {
+                                if (rule.Pattern != null && rule.Pattern.IsMatch(elem.Name))
+                                {
+                                    string expr = PrepareExpressionForTdm(rule.DataPainterExpr, elem.Value);
+                                    expressionsToResolve.Add(expr);
+                                    targets.Add(Tuple.Create(i, elem.Name, elem.Value));
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (expressionsToResolve.Count > 0)
+                    {
+                        var resolvedValues = _tdmContextClient.ResolveMultipleExpressions(expressionsToResolve);
+                        if (resolvedValues != null && resolvedValues.Count == expressionsToResolve.Count)
+                        {
+                            var resultDocs = new List<BsonDocument>(sourceBatch.Count);
+                            var docMap = new Dictionary<int, Dictionary<string, BsonValue>>();
+
+                            for (int k = 0; k < resolvedValues.Count; k++)
+                            {
+                                int docIdx = targets[k].Item1;
+                                string fName = targets[k].Item2;
+                                BsonValue origVal = targets[k].Item3;
+
+                                if (!docMap.TryGetValue(docIdx, out var fields))
+                                {
+                                    fields = new Dictionary<string, BsonValue>();
+                                    docMap[docIdx] = fields;
+                                }
+
+                                fields[fName] = ConvertStringToBsonValue(resolvedValues[k], origVal);
+                                batchMaskedFields++;
+                            }
+
+                            for (int i = 0; i < sourceBatch.Count; i++)
+                            {
+                                var orig = sourceBatch[i];
+                                var masked = new BsonDocument();
+                                docMap.TryGetValue(i, out var fieldOverrides);
+
+                                foreach (var elem in orig.Elements)
+                                {
+                                    if (fieldOverrides != null && fieldOverrides.TryGetValue(elem.Name, out var mVal))
+                                    {
+                                        masked.Add(elem.Name, mVal);
+                                    }
+                                    else
+                                    {
+                                        masked.Add(elem);
+                                    }
+                                }
+                                resultDocs.Add(masked);
+                            }
+
+                            return resultDocs;
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            // Fallback: Avaliação direta pelo motor local em memória
+            var fallbackDocs = new List<BsonDocument>(sourceBatch.Count);
+            foreach (var doc in sourceBatch)
+            {
+                int count;
+                fallbackDocs.Add(MaskDocument(doc, out count));
+                batchMaskedFields += count;
+            }
+            return fallbackDocs;
+        }
+
+        private string PrepareExpressionForTdm(string formula, BsonValue originalValue)
+        {
+            if (string.IsNullOrWhiteSpace(formula)) return "''";
+
+            string prepared = formula;
+            if (originalValue != null)
+            {
+                string rawStr = originalValue.ToString().Replace("'", "''");
+                prepared = prepared.Replace("<clone>", rawStr).Replace("<val>", rawStr);
+            }
+
+            return prepared;
+        }
+
+        private BsonValue ConvertStringToBsonValue(string resolvedStr, BsonValue originalValue)
+        {
+            if (resolvedStr == null) return BsonNull.Value;
+
+            if (originalValue != null && originalValue.IsNumeric)
+            {
+                if (long.TryParse(resolvedStr, out long lVal)) return new BsonInt64(lVal);
+                if (double.TryParse(resolvedStr, NumberStyles.Any, CultureInfo.InvariantCulture, out double dVal)) return new BsonDouble(dVal);
+            }
+
+            return new BsonString(resolvedStr);
+        }
+
         private BsonValue EvaluateFormulaToBson(string formula, string fieldName, BsonValue originalValue)
         {
             if (string.IsNullOrWhiteSpace(formula))
@@ -165,11 +295,11 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                 string ln = LastNames[_random.Next(LastNames.Length)];
                 return $"{fn} {ln}";
             }
-            if (formula.Contains("First Name"))
+            if (formula.Contains("First Name") || formula.Contains("FirstName"))
                 return FirstNames[_random.Next(FirstNames.Length)];
-            if (formula.Contains("Last Name") || formula.Contains("SURNAMES"))
+            if (formula.Contains("Last Name") || formula.Contains("LastName") || formula.Contains("SURNAMES"))
                 return LastNames[_random.Next(LastNames.Length)];
-            if (formula.Contains("FULL_ADDRESS") || formula.Contains("Street"))
+            if (formula.Contains("FULL_ADDRESS") || formula.Contains("Street") || formula.Contains("Address"))
                 return StreetNames[_random.Next(StreetNames.Length)];
 
             if (formula.Contains("@dob("))
@@ -178,12 +308,18 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
                 return DateTime.Now.AddYears(-age).AddDays(_random.Next(0, 365)).ToString("yyyy-MM-dd");
             }
 
-            if (formula.Contains("@hash()"))
+            if (formula.Contains("@formatencrypt(") || formula.Contains("@hash()"))
             {
                 using (var sha = SHA256.Create())
                 {
                     byte[] bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(originalValue?.ToString() ?? Guid.NewGuid().ToString()));
-                    return BitConverter.ToString(bytes).Replace("-", "").Substring(0, 16);
+                    string hashStr = BitConverter.ToString(bytes).Replace("-", "");
+                    if (originalValue != null && originalValue.IsString)
+                    {
+                        int origLen = originalValue.AsString.Length;
+                        return hashStr.Length >= origLen ? hashStr.Substring(0, Math.Max(1, origLen)) : hashStr;
+                    }
+                    return hashStr.Substring(0, 16);
                 }
             }
 
@@ -224,7 +360,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
 
             string rawCpf = sb.ToString();
 
-            if (originalValue != null && originalValue.AsString.Contains("."))
+            if (originalValue != null && originalValue.IsString && originalValue.AsString.Contains("."))
             {
                 return $"{rawCpf.Substring(0, 3)}.{rawCpf.Substring(3, 3)}.{rawCpf.Substring(6, 3)}-{rawCpf.Substring(9, 2)}";
             }
@@ -259,7 +395,7 @@ namespace GridTools.Javelin.MongoDbActivities.Helpers
 
             string rawCnpj = sb.ToString();
 
-            if (originalValue != null && originalValue.AsString.Contains("."))
+            if (originalValue != null && originalValue.IsString && originalValue.AsString.Contains("."))
             {
                 return $"{rawCnpj.Substring(0, 2)}.{rawCnpj.Substring(2, 3)}.{rawCnpj.Substring(5, 3)}/{rawCnpj.Substring(8, 4)}-{rawCnpj.Substring(12, 2)}";
             }
